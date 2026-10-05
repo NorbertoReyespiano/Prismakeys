@@ -2579,7 +2579,6 @@
             display: flex; align-items: stretch; gap: 6px; width: 100%; height: 26px; padding: 2px 6px;
             box-sizing: border-box; background: #060608;
         }
-        body.compact.microtonal-active #compactKeyNav,
         body[data-section="microfono"] #compactKeyNav,
         body[data-section="pintar"] #compactKeyNav,
         body[data-section="modos_griegos"] #compactKeyNav,
@@ -2607,6 +2606,20 @@
         body.compact .piano-container::-webkit-scrollbar { display: none; }
         body.compact .piano-container .piano { flex: 0 0 auto; width: calc(100% * var(--ck-scale, 3.7143)); }
         @media (max-height: 520px) { body.compact #compactKeyNav { height: 22px; } }
+        /* Teclado MICROTONAL en vista compacta: las teclas pasan de "repartirse todo el ancho" (cada
+           vez más finas con 25-53 pasos) a medir lo de --ckmt-vis teclas visibles a la vez (JS), y la
+           fila se desplaza con la MISMA franja #compactKeyNav del piano. Fila y botones algo más bajos
+           que el alto de reserva del piano para que las teclas queden grandes. */
+        body.compact .piano-container, body.compact #mainMicrotonalContainer { height: 112px; }
+        @media (max-height: 520px) { body.compact #mainMicrotonalContainer { height: 92px; } }
+        body.compact #mainMicrotonalRow .dc-piano-key {
+            flex: 0 0 calc((100% - (var(--ckmt-vis, 12) - 1) * 2px) / var(--ckmt-vis, 12));
+            min-width: 0; font-size: 0.8rem;
+        }
+        body.compact #mainMicrotonalRow { scrollbar-width: none; }
+        body.compact #mainMicrotonalRow::-webkit-scrollbar { display: none; }
+        body.compact .mm-scale-lock-toolbar { gap: 6px; }
+        body.compact .mm-scale-lock-toolbar button { padding: 4px 10px; font-size: 11px; min-height: 28px; }
     </style>
 </head>
 <body>
@@ -18772,51 +18785,90 @@
 
 
     // ---------- TECLADO CON DESPLAZAMIENTO (vista compacta) ----------
-    // Ver el bloque CSS homónimo. 52 teclas blancas en total (A0..C8); se ven CK_ZOOMS[i] a la vez.
+    // Ver el bloque CSS homónimo. La MISMA franja #compactKeyNav desplaza dos teclados distintos según
+    // el modo: el piano de 88 teclas (52 blancas, A0..C8; se ven CK_ZOOMS[i] a la vez) o, con
+    // "Modo: Microtonalidad" activo, la fila de pasos #mainMicrotonalRow (se ven CK_MT_ZOOMS[i]).
     const CK_TOTAL_WHITES = 52;
     const CK_ZOOMS = [{ whites: 14, label: '2 OCT' }, { whites: 28, label: '4 OCT' }, { whites: 52, label: '88' }];
+    const CK_MT_ZOOMS = [{ vis: 12, label: '12' }, { vis: 24, label: '24' }, { vis: 0, label: 'TODO' }];
     const CK_C3_WHITE_INDEX = 16; // A0 B0 + 14 blancas (C1..B2) = 16 -> la 17ª blanca es C3
     let ckZoomIdx = 0;
+    let ckMtZoomIdx = 0;
     let ckPlaced = false;
     let ckLastSig = '';
+    let ckLastMicro = null;
 
-    function ckContainer() { return document.getElementById('pianoContainer'); }
-    function ckWhiteWidth() { const c = ckContainer(); return c ? c.scrollWidth / CK_TOTAL_WHITES : 0; }
+    function ckIsMicro() { return document.body.classList.contains('microtonal-active'); }
+    function ckScroller() { return document.getElementById(ckIsMicro() ? 'mainMicrotonalRow' : 'pianoContainer'); }
+    function ckMtKeys() { const r = document.getElementById('mainMicrotonalRow'); return r ? r.querySelectorAll('.dc-piano-key') : []; }
+    // Ancho de una "unidad" de desplazamiento: una tecla blanca (piano) o una tecla de la fila (microtonal).
+    function ckWhiteWidth() {
+        const c = ckScroller();
+        if (!c) return 0;
+        if (ckIsMicro()) {
+            const k = ckMtKeys();
+            if (k.length >= 2) return k[1].offsetLeft - k[0].offsetLeft;
+            return k.length ? k[0].offsetWidth : 0;
+        }
+        return c.scrollWidth / CK_TOTAL_WHITES;
+    }
 
     function ckApplyZoom() {
-        const z = CK_ZOOMS[ckZoomIdx];
-        document.documentElement.style.setProperty('--ck-scale', String(CK_TOTAL_WHITES / z.whites));
-        const b = document.getElementById('ckZoomBtn');
-        if (b) b.textContent = z.label;
+        const micro = ckIsMicro();
+        const btn = document.getElementById('ckZoomBtn');
+        if (micro) {
+            const n = ckMtKeys().length;
+            const z = CK_MT_ZOOMS[ckMtZoomIdx];
+            const vis = Math.max(1, z.vis === 0 ? n : Math.min(z.vis, n));
+            document.documentElement.style.setProperty('--ckmt-vis', String(vis));
+            if (btn) btn.textContent = z.label;
+        } else {
+            const z = CK_ZOOMS[ckZoomIdx];
+            document.documentElement.style.setProperty('--ck-scale', String(CK_TOTAL_WHITES / z.whites));
+            if (btn) btn.textContent = z.label;
+        }
     }
 
     function compactKeyCycleZoom() {
-        const c = ckContainer();
-        // se conserva el centro de la ventana al cambiar la cantidad de octavas
+        const c = ckScroller();
+        // se conserva el centro de la ventana al cambiar la cantidad de teclas visibles
         const centerRatio = c && c.scrollWidth ? (c.scrollLeft + c.clientWidth / 2) / c.scrollWidth : 0.4;
-        ckZoomIdx = (ckZoomIdx + 1) % CK_ZOOMS.length;
+        if (ckIsMicro()) ckMtZoomIdx = (ckMtZoomIdx + 1) % CK_MT_ZOOMS.length;
+        else ckZoomIdx = (ckZoomIdx + 1) % CK_ZOOMS.length;
         ckApplyZoom();
         if (c) c.scrollLeft = centerRatio * c.scrollWidth - c.clientWidth / 2;
         ckUpdateNav();
     }
 
-    // Desplaza una octava (7 blancas) por toque de flecha.
+    // Desplaza 7 teclas (una octava de blancas en el piano) por toque de flecha.
     function compactKeyShift(dir) {
-        const c = ckContainer();
+        const c = ckScroller();
         if (!c) return;
         c.scrollTo({ left: c.scrollLeft + dir * 7 * ckWhiteWidth(), behavior: 'smooth' });
     }
 
-    // Etiqueta "C3–B4" con el rango de blancas visibles + posición de la ventana sobre el mapa.
+    // Etiqueta con el rango visible ("C3–B4" en el piano, "3–14" = números de paso en microtonal) +
+    // posición de la ventana sobre el mapa.
     function ckUpdateNav() {
-        const c = ckContainer();
+        const c = ckScroller();
         const thumb = document.getElementById('ckThumb');
         if (!c || !thumb || !c.scrollWidth) return;
         const ratio = c.scrollLeft / c.scrollWidth;
         const wRatio = Math.min(1, c.clientWidth / c.scrollWidth);
         thumb.style.left = `${ratio * 100}%`;
         thumb.style.width = `${wRatio * 100}%`;
+        const lbl = document.getElementById('ckRange');
+        if (!lbl) return;
         const wk = ckWhiteWidth() || 1;
+        if (ckIsMicro()) {
+            const keys = ckMtKeys();
+            if (!keys.length) { lbl.textContent = ''; return; }
+            const first = Math.max(0, Math.min(keys.length - 1, Math.round((c.scrollLeft) / wk)));
+            const last = Math.max(first, Math.min(keys.length - 1, first + Math.floor(c.clientWidth / wk) - 1));
+            const lab = (k) => (k.dataset.step === '0' ? 'T' : k.dataset.step);
+            lbl.textContent = (first === 0 && last === keys.length - 1) ? 'TODO' : `${lab(keys[first])}–${lab(keys[last])}`;
+            return;
+        }
         const first = Math.max(0, Math.min(CK_TOTAL_WHITES - 1, Math.round(c.scrollLeft / wk)));
         const last = Math.max(first, Math.min(CK_TOTAL_WHITES - 1, Math.round((c.scrollLeft + c.clientWidth) / wk) - 1));
         const names = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -18824,21 +18876,22 @@
             const n = idx + 5; // A0 = grado 5 (A) de la octava 0 -> convertir a letra/octava
             return `${names[n % 7]}${Math.floor(n / 7)}`;
         };
-        const lbl = document.getElementById('ckRange');
-        if (lbl) lbl.textContent = (last - first >= CK_TOTAL_WHITES - 2) ? 'A0–C8' : `${nameOf(first)}–${nameOf(last)}`;
+        lbl.textContent = (last - first >= CK_TOTAL_WHITES - 2) ? 'A0–C8' : `${nameOf(first)}–${nameOf(last)}`;
     }
 
     // Puntos de color sobre el mapa para las teclas que suenan (también las que están fuera de la ventana).
     function ckUpdateMarks() {
-        const c = ckContainer();
+        const c = ckScroller();
         const marks = document.getElementById('ckMarks');
         if (!c || !marks || !c.scrollWidth) return;
-        const active = document.querySelectorAll('#pianoBody .key.active');
+        const active = ckIsMicro()
+            ? document.querySelectorAll('#mainMicrotonalRow .dc-piano-key.active')
+            : document.querySelectorAll('#pianoBody .key.active');
         let sig = '';
         const items = [];
         active.forEach(k => {
             const frac = (k.offsetLeft + k.offsetWidth / 2) / c.scrollWidth;
-            const col = k.style.getPropertyValue('--active-color') || getComputedStyle(k).backgroundColor || '#fff';
+            const col = k.style.getPropertyValue('--active-color') || k.style.backgroundColor || getComputedStyle(k).backgroundColor || '#fff';
             items.push([frac, col]);
             sig += `${frac.toFixed(3)}${col}|`;
         });
@@ -18849,21 +18902,25 @@
 
     // Primera vez que el piano es visible en vista compacta: ventana de 2 octavas desde C3 (rodea el Do central).
     function ckPlaceInitial() {
-        const c = ckContainer();
+        const c = document.getElementById('pianoContainer');
         if (!c || !c.clientWidth || !c.scrollWidth) return;
-        c.scrollLeft = CK_C3_WHITE_INDEX * ckWhiteWidth();
+        c.scrollLeft = CK_C3_WHITE_INDEX * (c.scrollWidth / CK_TOTAL_WHITES);
         ckPlaced = true;
         ckUpdateNav();
     }
 
     function initCompactKeyboard() {
-        const c = ckContainer();
         const track = document.getElementById('ckTrack');
-        if (!c || !track) return;
+        if (!track) return;
         ckApplyZoom();
-        c.addEventListener('scroll', ckUpdateNav, { passive: true });
+        ['pianoContainer', 'mainMicrotonalRow'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('scroll', ckUpdateNav, { passive: true });
+        });
         // Arrastrar / tocar sobre el mapa: el centro de la ventana va al punto tocado.
         const moveTo = (e) => {
+            const c = ckScroller();
+            if (!c) return;
             const r = track.getBoundingClientRect();
             const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
             c.scrollLeft = frac * c.scrollWidth - c.clientWidth / 2;
@@ -18876,10 +18933,19 @@
         track.addEventListener('pointercancel', stop);
         setInterval(() => {
             if (!isCompactView) return;
-            if (!ckPlaced) ckPlaceInitial();
+            const micro = ckIsMicro();
+            // al cambiar entre piano <-> microtonal (o si cambió la cantidad de teclas al fijar una
+            // escala) se reaplica el zoom y se refresca el rango
+            const nKeys = micro ? ckMtKeys().length : 0;
+            if (micro !== ckLastMicro || (micro && String(nKeys) !== ckLastMicroN)) {
+                ckLastMicro = micro; ckLastMicroN = String(nKeys); ckLastSig = '';
+                ckApplyZoom(); ckUpdateNav();
+            }
+            if (!micro && !ckPlaced) ckPlaceInitial();
             ckUpdateMarks();
         }, 120);
     }
+    let ckLastMicroN = '';
 
     // El cajón de ajustes se cierra al tocar el lienzo; el botón GRABAR de la barra refleja el estado
     // del botón real (#prismaRecordBtn) sin tocar su lógica.
@@ -20354,6 +20420,8 @@
     function updateMainMicrotonalKeyboard() {
         const active = isMicrotonalRowActive();
         document.body.classList.toggle('microtonal-active', active);
+        // En vista compacta el piano y la fila microtonal pueden tener alto distinto: se recalcula el lienzo.
+        if (typeof isCompactView !== 'undefined' && isCompactView) resizeCanvas();
         if (active) {
             rebuildMainDiesisSteps();
             buildMainMicrotonalKeyboardDOM();
