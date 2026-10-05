@@ -2428,6 +2428,96 @@
             cursor: not-allowed;
         }
 
+
+        /* ===================== VISTA COMPACTA (TABLET / PANTALLAS CHICAS) =====================
+           A pedido del usuario (usará PrismaKeys primero en una tableta): MISMO programa, MISMO
+           motor, pero con la interfaz reordenada para que el lienzo de color/sonido tenga el mayor
+           espacio posible. Nada se borra ni se duplica en lógica: body.compact (lo pone/saca
+           applyViewMode(), ver el script) solo cambia CÓMO se muestran los elementos de siempre.
+           - La cabecera completa (.header-controls) pasa a ser un CAJÓN que se abre con "AJUSTES"
+             desde #compactBar (barra delgada de 44px con lo más usado).
+           - Los paneles laterales (Acordes/Círculo Cromático, Mezcla Hexadecimal/Analizador) dejan de
+             ocupar 520px fijos: quedan ocultos y se superponen al lienzo con el botón "INFO".
+           - RESETEO/LIMPIAR PANTALLA pasan a la barra superior; el piano baja de 140px a 100px y se
+             puede ocultar del todo con "PIANO".
+           - Botones y listas más grandes para el dedo (mín. 40px de alto de toque). */
+        .compact-bar { display: none; }
+        .home-viewmode-btn {
+            background: transparent; border: 1px solid #333; color: #888; font-family: inherit;
+            font-size: 11px; letter-spacing: 1px; padding: 8px 14px; border-radius: 3px; cursor: pointer;
+        }
+        .home-viewmode-btn:hover { color: var(--accent); border-color: var(--accent); }
+        body.compact #homeScreen { overflow-y: auto; justify-content: safe center; gap: 18px; padding: 16px; }
+        body.compact #homeScreen .home-buttons { gap: 8px; }
+        body.compact .compact-bar {
+            display: flex; align-items: center; gap: 6px; width: 100%; flex: 0 0 44px; height: 44px;
+            padding: 0 8px; background: #0a0a0a; border-bottom: 1px solid #222; overflow: hidden;
+            position: relative; z-index: 71; box-sizing: border-box;
+        }
+        .compact-bar button {
+            height: 34px; min-width: 40px; padding: 0 10px; font-family: inherit; font-size: 11px;
+            font-weight: bold; letter-spacing: 0.5px; white-space: nowrap; cursor: pointer; border-radius: 3px;
+            background: #000; border: 1px solid var(--accent); color: var(--accent);
+            touch-action: manipulation;
+        }
+        .compact-bar button:active, .compact-bar button.on { background: var(--accent); color: #000; }
+        .compact-bar .cb-home { border-color: var(--minor-accent); color: var(--minor-accent); }
+        .compact-bar .cb-home:active { background: var(--minor-accent); color: #000; }
+        .compact-bar .cb-danger { border-color: var(--panic); color: var(--panic); }
+        .compact-bar .cb-danger:active, .compact-bar #compactRecBtn.recording { background: var(--panic); color: #fff; }
+        .compact-bar .cb-spacer { flex: 1 1 auto; }
+        .compact-bar .cb-perf { border-color: var(--line); color: var(--line); }
+        .compact-bar .cb-perf:active { background: var(--line); color: #000; }
+        body[data-section="pintar"] .compact-bar .cb-perf,
+        body[data-section="modos_griegos"] .compact-bar .cb-perf,
+        body[data-section="circulo_diesis"] .compact-bar .cb-perf,
+        body[data-section="pintar"] .compact-bar #compactPianoBtn,
+        body[data-section="microfono"] .compact-bar #compactPianoBtn { display: none; }
+
+        /* Cajón de ajustes: la cabecera de siempre, flotando bajo la barra. overflow:visible a
+           propósito (los .dropdown-menu abren hacia abajo, un overflow:auto los recortaría). */
+        body.compact .header-controls {
+            display: none; position: absolute; top: 44px; left: 0; right: 0; z-index: 70;
+            padding: 10px 8px 12px; gap: 10px; border-bottom: 2px solid var(--accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+        }
+        body.compact.compact-menu-open .header-controls { display: flex; }
+        body.compact .header-row-top { gap: 10px; }
+        body.compact .header-controls button,
+        body.compact .header-controls .dropdown-toggle { min-height: 40px; }
+        body.compact .dropdown-menu { max-height: 55vh; }
+        body.compact .dropdown-menu li { padding: 11px 16px; font-size: 13px; }
+        body.compact #prismaRecordBtn, body.compact .header-controls .btn-home { display: none; }
+        /* La tonalidad se acomoda en el hueco libre de la barra (entre PIANO y LIMPIAR). */
+        body.compact #tonalityStatusBox { top: 9px; right: 262px; padding: 4px 10px; font-size: 10px; }
+
+        /* Zen / Cinematic: la barra queda reducida a un único botón "SALIR" para no atrapar al
+           usuario táctil (en la tableta no hay teclado para las teclas F / Z). */
+        body.compact.zen-mode .compact-bar, body.compact.clean-mode .compact-bar {
+            position: fixed; top: 0; left: 0; width: auto; background: transparent; border: none; z-index: 80;
+        }
+        body.compact.zen-mode .compact-bar > *:not(#compactExitBtn),
+        body.compact.clean-mode .compact-bar > *:not(#compactExitBtn) { display: none; }
+        #compactExitBtn { display: none; }
+        body.compact.zen-mode #compactExitBtn, body.compact.clean-mode #compactExitBtn { display: block; opacity: 0.55; }
+        body.compact.zen-mode .header-controls, body.compact.clean-mode .header-controls { display: none !important; }
+
+        /* Paneles laterales: ocultos por defecto; con "INFO" se superponen al lienzo. Los selectores
+           de sección (modos_griegos / circulo_diesis) llevan !important arriba o más específicos,
+           así que siguen ocultándolos donde corresponde. */
+        body.compact #mainScreenRow { position: relative; }
+        body.compact .side-panel { display: none; }
+        body.compact.compact-panels:not([data-section="modos_griegos"]):not([data-section="circulo_diesis"]) .side-panel {
+            display: flex; position: absolute; top: 0; bottom: var(--compact-console-h, 112px); z-index: 30; flex: none; width: 240px;
+            background: rgba(0,0,0,0.9);
+        }
+        body.compact.compact-panels .side-panel-left { left: 0; border-right: 1px solid #222; }
+        body.compact.compact-panels .side-panel-right { right: 0; border-left: 1px solid #222; }
+
+        /* Consola inferior: RESETEO / LIMPIAR PANTALLA ya están en la barra; el piano se achica. */
+        body.compact #panelIntegrated { display: none; }
+        body.compact .piano-container, body.compact .piano-container-microtonal { height: 100px; }
+        body.compact.compact-no-piano .console-bottom { display: none; }
     </style>
 </head>
 <body>
@@ -2518,9 +2608,30 @@
              display:none. -->
         <button type="button" class="home-btn home-btn-section" style="display:none" onclick="enterPrismaKeys('circulo_diesis', event)" disabled title="Primero presioná ENCENDIDO/APAGADO (E/A)">CÍRCULO DE DIESIS</button>
     </div>
+    <!-- VISTA: Automática (detecta tableta/pantalla chica) / Compacta / Completa -- ver
+         applyViewMode() en el script. Recordada entre visitas. -->
+    <button type="button" class="home-viewmode-btn" id="homeViewModeBtn" onclick="cycleViewMode()">VISTA: AUTOMÁTICA</button>
 </div>
 
 <div id="mainAppContainer" class="hidden">
+
+<!-- VISTA COMPACTA (ver el bloque CSS "VISTA COMPACTA" en <style> y applyViewMode() en el script):
+     barra delgada que SOLO se ve con body.compact (tableta/pantallas chicas). Son atajos a funciones
+     que ya existen (goToHomeScreen/toggleVisualMode/clearScreenButton/panicReset/
+     togglePrismaRecording) -- ninguna lógica nueva de sonido. "AJUSTES" abre la cabecera completa de
+     siempre como un cajón. -->
+<div id="compactBar" class="compact-bar" role="toolbar" aria-label="Barra compacta">
+    <button type="button" id="compactMenuBtn" onclick="toggleCompactMenu()" aria-expanded="false">☰ AJUSTES</button>
+    <button type="button" class="cb-home" onclick="goToHomeScreen()">INICIO</button>
+    <button type="button" class="cb-perf" onclick="toggleVisualMode()" aria-label="Cambiar al siguiente modo de performance">PERFORMANCE ▶</button>
+    <button type="button" id="compactPanelsBtn" onclick="toggleCompactPanels()">INFO</button>
+    <button type="button" id="compactPianoBtn" onclick="toggleCompactPiano()">PIANO</button>
+    <span class="cb-spacer"></span>
+    <button type="button" onclick="clearScreenButton(event)">LIMPIAR</button>
+    <button type="button" class="cb-danger" onclick="panicReset()">RESETEO</button>
+    <button type="button" class="cb-danger" id="compactRecBtn" onclick="togglePrismaRecording()">● GRABAR</button>
+    <button type="button" id="compactExitBtn" onclick="exitCompactImmersive()">✕ SALIR</button>
+</div>
 
 <div class="header-controls">
     <!-- "MENÚ PRINCIPAL" (goToHomeScreen(), ver el script y el comentario junto a .btn-home en
@@ -16274,8 +16385,7 @@
     // dual.
     function positionDualSynthScreen() {
         const screen = document.getElementById('dualSynthScreen');
-        const header = document.querySelector('.header-controls');
-        if (screen && header) screen.style.top = `${header.offsetHeight}px`;
+        if (screen) screen.style.top = `${getTopBarHeight()}px`;
     }
 
     // Abre/cierra #dualSynthScreen -- atado a su categoría de APRENDIZAJE MUSICAL (#dd-writing), a
@@ -18408,10 +18518,11 @@
         // enterPrismaKeys() ya vuelve a llamar a resizeCanvas() en cuanto el contenedor se hace
         // visible para recalcular el ancho angostado real.
         const wrapperWidth = document.getElementById('canvasWrapper').clientWidth;
+        document.documentElement.style.setProperty('--compact-console-h', `${consoleBottom.offsetHeight}px`);
         wCan.width = isZenMode ? window.innerWidth : (wrapperWidth > 0 ? wrapperWidth : window.innerWidth);
         wCan.height = isZenMode
             ? window.innerHeight
-            : window.innerHeight - consoleBottom.offsetHeight - document.querySelector('.header-controls').offsetHeight;
+            : window.innerHeight - consoleBottom.offsetHeight - getTopBarHeight();
         // #drawTabletCanvas ("Pintar con Sonidos" como app de dibujo, ver ese comentario grande
         // junto a "let drawTabletCanvas" más arriba): hermano de #wave, mide EXACTAMENTE lo mismo
         // -- se recalcula acá mismo, en cada resize/entrada a sección, por el mismo motivo que #wave.
@@ -18422,7 +18533,117 @@
         updateSeqPixelsPerBeat();
     }
 
+
+    // ===================== VISTA COMPACTA (tableta / pantallas chicas) =====================
+    // Ver el bloque CSS "VISTA COMPACTA" en <style>. viewModePref: 'auto' (por defecto) decide solo
+    // según el dispositivo -- puntero táctil principal (tabletas/celulares) o ventana de 1100px de
+    // ancho o menos; 'compact' y 'full' fuerzan una u otra. La preferencia se recuerda en
+    // localStorage (envuelto en try/catch: puede no estar disponible).
+    let viewModePref = 'auto';
+    let isCompactView = false;
+    try {
+        const saved = localStorage.getItem('prismakeys_viewmode');
+        if (saved === 'auto' || saved === 'compact' || saved === 'full') viewModePref = saved;
+    } catch (e) {}
+
+    function shouldBeCompact() {
+        if (viewModePref === 'compact') return true;
+        if (viewModePref === 'full') return false;
+        let coarse = false;
+        try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
+        return coarse || window.innerWidth <= 1100;
+    }
+
+    // Altura REAL de la franja superior que le resta espacio al lienzo: la barra compacta de 44px
+    // (el cajón de ajustes flota por encima, no empuja nada) o la cabecera completa de siempre.
+    function getTopBarHeight() {
+        if (isCompactView) {
+            const bar = document.getElementById('compactBar');
+            return bar ? bar.offsetHeight : 44;
+        }
+        return document.querySelector('.header-controls').offsetHeight;
+    }
+
+    function updateViewModeLabels() {
+        const label = viewModePref === 'auto' ? 'VISTA: AUTOMÁTICA'
+            : (viewModePref === 'compact' ? 'VISTA: COMPACTA' : 'VISTA: COMPLETA');
+        const btn = document.getElementById('homeViewModeBtn');
+        if (btn) btn.textContent = label;
+    }
+
+    // Aplica (o quita) body.compact según la preferencia y el tamaño actual; si cambió, recalcula
+    // el lienzo. Se llama al arrancar, al cambiar el tamaño/orientación y al cambiar la preferencia.
+    function applyViewMode() {
+        const want = shouldBeCompact();
+        updateViewModeLabels();
+        if (want === isCompactView && document.body.classList.contains('compact') === want) return;
+        isCompactView = want;
+        document.body.classList.toggle('compact', want);
+        if (!want) {
+            document.body.classList.remove('compact-menu-open', 'compact-panels', 'compact-no-piano');
+        }
+        resizeCanvas();
+        if (dualSynthOpen) positionDualSynthScreen();
+    }
+
+    function cycleViewMode() {
+        viewModePref = viewModePref === 'auto' ? 'compact' : (viewModePref === 'compact' ? 'full' : 'auto');
+        try { localStorage.setItem('prismakeys_viewmode', viewModePref); } catch (e) {}
+        applyViewMode();
+        showNotification(viewModePref === 'auto' ? 'VISTA AUTOMÁTICA (SEGÚN EL DISPOSITIVO)'
+            : (viewModePref === 'compact' ? 'VISTA COMPACTA' : 'VISTA COMPLETA'));
+    }
+
+    function toggleCompactMenu(force) {
+        const open = (typeof force === 'boolean') ? force : !document.body.classList.contains('compact-menu-open');
+        document.body.classList.toggle('compact-menu-open', open);
+        const btn = document.getElementById('compactMenuBtn');
+        if (btn) { btn.classList.toggle('on', open); btn.setAttribute('aria-expanded', String(open)); }
+        if (!open) closeAllDropdowns();
+    }
+
+    function toggleCompactPanels() {
+        const on = document.body.classList.toggle('compact-panels');
+        document.getElementById('compactPanelsBtn').classList.toggle('on', on);
+        resizeCanvas();
+    }
+
+    function toggleCompactPiano() {
+        const on = document.body.classList.toggle('compact-no-piano');
+        document.getElementById('compactPianoBtn').classList.toggle('on', on);
+        document.getElementById('compactPianoBtn').textContent = on ? 'PIANO ▲' : 'PIANO';
+        resizeCanvas();
+    }
+
+    // Zen / Cinematic ocultan la barra; este botón (único visible) las apaga con el dedo.
+    function exitCompactImmersive() {
+        if (isZenMode) toggleZenMode();
+        if (isCleanMode) toggleCleanMode();
+    }
+
+    // El cajón de ajustes se cierra al tocar el lienzo; el botón GRABAR de la barra refleja el estado
+    // del botón real (#prismaRecordBtn) sin tocar su lógica.
+    (function initCompactView() {
+        const wrap = document.getElementById('canvasWrapper');
+        if (wrap) wrap.addEventListener('pointerdown', () => {
+            if (document.body.classList.contains('compact-menu-open')) toggleCompactMenu(false);
+        });
+        const real = document.getElementById('prismaRecordBtn');
+        const mirror = document.getElementById('compactRecBtn');
+        if (real && mirror && window.MutationObserver) {
+            new MutationObserver(() => {
+                mirror.classList.toggle('recording', real.classList.contains('recording'));
+                mirror.textContent = real.textContent;
+            }).observe(real, { attributes: true, childList: true, characterData: true, subtree: true });
+        }
+        try {
+            const mq = window.matchMedia('(pointer: coarse)');
+            if (mq.addEventListener) mq.addEventListener('change', applyViewMode);
+        } catch (e) {}
+    })();
+
     window.onresize = () => {
+        applyViewMode();
         resizeCanvas();
         // .header-controls puede cambiar de alto al redimensionar (flex-wrap a 2 líneas) -- si
         // #dualSynthScreen está abierta, su borde superior tiene que seguirle el paso.
@@ -18435,6 +18656,7 @@
         }
     };
 
+    applyViewMode();
     resizeCanvas();
     initPiano();
     initCircleScreenUI();
