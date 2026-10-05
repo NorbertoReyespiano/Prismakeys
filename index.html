@@ -2526,8 +2526,8 @@
         body[data-section="modos_griegos"] .cb-act-wrap { display: none; }
         .cb-perf-wrap { position: relative; display: inline-block; }
         .cb-perf-menu {
-            display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 90; margin: 0; padding: 4px 0; list-style: none;
-            min-width: 230px; max-height: calc(100vh - var(--compact-bar-h, 44px) - 16px); overflow-y: auto;
+            display: none; position: fixed; top: var(--compact-bar-h, 44px); left: 8px; z-index: 90; margin: 0; padding: 4px 0; list-style: none;
+            width: min(94vw, 380px); box-sizing: border-box; -webkit-overflow-scrolling: touch; max-height: calc(100vh - var(--compact-bar-h, 44px) - 16px); overflow-y: auto;
             background: #000; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 10px 28px rgba(0,0,0,0.85);
         }
         @supports (height: 100dvh) { .cb-perf-menu { max-height: calc(100dvh - var(--compact-bar-h, 44px) - 16px); } }
@@ -2537,6 +2537,7 @@
             border-bottom: 1px solid #111; touch-action: manipulation;
         }
         .cb-perf-menu li:last-child { border-bottom: none; }
+        .cb-perf-menu li { white-space: normal; }
         .cb-perf-menu li.cb-perf-head { border-top: 1px solid var(--line); color: #9fd; font-size: 12px; letter-spacing: 1px; }
         .cb-perf-menu li.cb-bg-item { display: none; padding-left: 28px; font-size: 12px; }
         .cb-perf-menu.bg-open li.cb-bg-item { display: block; }
