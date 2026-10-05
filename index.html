@@ -1749,6 +1749,8 @@
         body[data-section="modos_griegos"] #dd-tonic,
         body[data-section="modos_griegos"] #tonicPaletteRow,
         body[data-section="modos_griegos"] #dd-soundchar,
+        body[data-section="modos_griegos"] #dd-soundlist,
+        body[data-section="modos_griegos"] #dd-escalamusical,
         body[data-section="modos_griegos"] #dd-colorlock,
         body[data-section="modos_griegos"] #dd-writing,
         body[data-section="modos_griegos"] #dd-visualmode,
@@ -1943,6 +1945,8 @@
            consistente en todo PRISMAKEYS sin arriesgar romper el estilo de MODOS GRIEGOS. */
         body[data-section="circulo_diesis"] #dd-tonic,
         body[data-section="circulo_diesis"] #dd-soundchar,
+        body[data-section="circulo_diesis"] #dd-soundlist,
+        body[data-section="circulo_diesis"] #dd-escalamusical,
         body[data-section="circulo_diesis"] #dd-colorlock,
         body[data-section="circulo_diesis"] #dd-writing,
         body[data-section="circulo_diesis"] #dd-visualmode,
@@ -2490,6 +2494,58 @@
         body.compact .dropdown-menu { max-height: 55vh; }
         body.compact .dropdown-menu li { padding: 11px 16px; font-size: 13px; }
         body.compact #prismaRecordBtn, body.compact .header-controls .btn-home { display: none; }
+        /* Quitados del cajón de AJUSTES a pedido del usuario: AMBIENTE (#dd-performance: Cinematic/Zen, la vista compacta ya cumple esa función) y el recuadro "PRISMA KEYS". Siguen en el DOM por el código que los referencia. */
+        body.compact #dd-performance, body.compact .brand-mark { display: none !important; }
+        /* El selector PERFORMANCE sale de AJUSTES: ahora vive en la barra (botón PERFORMANCE ▾ + lista). */
+        body.compact #dd-visualmode { display: none !important; }
+        /* "Color de lienzo" (#dd-tonic) se quitó de la UI: su único contenido (Fondo del Lienzo) vive ahora en la lista PERFORMANCE. El nodo queda oculto porque #sub-paintbg guarda el estado activo. */
+        body.compact #dd-tonic { display: none !important; }
+        .compact-bar .cb-notation { min-width: 38px; font-size: 16px; font-weight: bold; border-color: #ff7bd0; color: #ff7bd0; }
+        .compact-bar .cb-notation:active { background: #ff7bd0; color: #000; }
+        .cb-sounds-wrap { display: inline-block; }
+        .compact-bar .cb-act { border-color: #00e0b0; color: #00e0b0; }
+        .compact-bar .cb-act:active, .compact-bar .cb-act.on { background: #00e0b0; color: #000; }
+        .cb-sounds-menu.cb-act-menu { border-color: #00e0b0; }
+        .cb-act-menu .control-box { align-items: stretch; width: 100%; }
+        .compact-bar .cb-sounds { border-color: #ffb000; color: #ffb000; }
+        .compact-bar .cb-sounds:active, .compact-bar .cb-sounds.on { background: #ffb000; color: #000; }
+        .cb-sounds-menu {
+            display: none; position: fixed; top: var(--compact-bar-h, 44px); left: 8px; z-index: 90;
+            width: min(94vw, 380px); max-height: calc(100vh - var(--compact-bar-h, 44px) - 12px); overflow-y: auto; -webkit-overflow-scrolling: touch;
+            box-sizing: border-box; padding: 8px; background: #000; border: 1px solid #ffb000; border-radius: 4px;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.85); flex-direction: column; gap: 8px;
+        }
+        @supports (height: 100dvh) { .cb-sounds-menu { max-height: calc(100dvh - var(--compact-bar-h, 44px) - 12px); } }
+        .cb-sounds-menu.open { display: flex; }
+        .cb-sounds-menu .control-box { align-items: stretch; width: 100%; }
+        .cb-sounds-menu .select-tonic { min-height: 40px; width: 100%; }
+        .cb-sounds-menu .dropdown.open > .dropdown-menu {
+            position: static; transform: none; width: 100%; min-width: 0; max-height: 45vh; margin-top: 6px; box-sizing: border-box;
+        }
+        body[data-section="circulo_diesis"] .cb-sounds-wrap,
+        body[data-section="modos_griegos"] .cb-act-wrap { display: none; }
+        .cb-perf-wrap { position: relative; display: inline-block; }
+        .cb-perf-menu {
+            display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 90; margin: 0; padding: 4px 0; list-style: none;
+            min-width: 230px; max-height: calc(100vh - var(--compact-bar-h, 44px) - 16px); overflow-y: auto;
+            background: #000; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 10px 28px rgba(0,0,0,0.85);
+        }
+        @supports (height: 100dvh) { .cb-perf-menu { max-height: calc(100dvh - var(--compact-bar-h, 44px) - 16px); } }
+        .cb-perf-menu.open { display: block; }
+        .cb-perf-menu li {
+            padding: 12px 16px; font-size: 13px; color: #fff; white-space: nowrap; cursor: pointer; letter-spacing: 0.5px;
+            border-bottom: 1px solid #111; touch-action: manipulation;
+        }
+        .cb-perf-menu li:last-child { border-bottom: none; }
+        .cb-perf-menu li.cb-perf-head { border-top: 1px solid var(--line); color: #9fd; font-size: 12px; letter-spacing: 1px; }
+        .cb-perf-menu li.cb-bg-item { display: none; padding-left: 28px; font-size: 12px; }
+        .cb-perf-menu.bg-open li.cb-bg-item { display: block; }
+        .cb-perf-menu li:active { background: rgba(0,255,65,0.2); }
+        .cb-perf-menu li.active { color: var(--line); font-weight: bold; background: rgba(0,255,65,0.1); }
+        body[data-section="aprendizaje"] .cb-perf-wrap,
+        body[data-section="pintar"] .cb-perf-wrap,
+        body[data-section="modos_griegos"] .cb-perf-wrap,
+        body[data-section="circulo_diesis"] .cb-perf-wrap { display: none; }
         /* La tonalidad se acomoda en el hueco libre de la barra (entre PIANO y LIMPIAR). */
         body.compact #tonalityStatusBox { top: 9px; right: 262px; padding: 4px 10px; font-size: 10px; }
 
@@ -2532,7 +2588,7 @@
         @supports (height: 100dvh) { body.compact { height: 100dvh; } }
         body.compact .compact-bar { flex: 0 0 auto; height: auto; min-height: 44px; flex-wrap: wrap; row-gap: 5px; padding: 5px 8px; overflow: visible; }
         body.compact .compact-bar .cb-spacer { display: none; }
-        body.compact .compact-bar .cb-first-right { margin-left: auto; }
+        body.compact .compact-bar .cb-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
         body.compact .header-controls { top: var(--compact-bar-h, 44px); }
         .btn-fullscreen-compact { display: none; }
         body.compact .btn-fullscreen-compact {
@@ -2622,7 +2678,7 @@
         body.compact .mm-scale-lock-toolbar button { padding: 4px 10px; font-size: 11px; min-height: 28px; }
     </style>
 </head>
-<body>
+<body class="compact">
 
 <!-- PANTALLA DE INICIO: ver el comentario grande junto a #homeScreen en <style> y
      goToHomeScreen()/enterPrismaKeys() en el script. Primer elemento del body para que sea lo
@@ -2686,12 +2742,10 @@
              comparte el AudioContext/afinación/tonalidad de siempre en vez de ser autónoma). -->
         <button type="button" class="home-btn home-btn-section" onclick="enterPrismaKeys('microfono', event)" disabled title="Primero presioná ENCENDIDO/APAGADO (E/A)">TOCAR CON MICRÓFONO</button>
         <button type="button" class="home-btn home-btn-dualsynth" onclick="openDualSynthFromHome(event)">SINTETIZADOR DUAL</button>
-        <!-- "MODOS GRIEGOS" (nueva sección, ver el comentario grande de #greekModesContainer en
-             <style>): a pedido EXPLÍCITO del usuario va DEBAJO de "SINTETIZADOR DUAL" en esta lista,
-             pero a diferencia de ese botón SÍ es ".home-btn-section" (arranca "disabled" y llama a
-             enterPrismaKeys(), no a una función propia) -- comparte el AudioContext/el aviso de
-             permiso MIDI del resto de PRISMAKEYS en vez de ser autónomo como Sintetizador Dual. -->
-        <button type="button" class="home-btn home-btn-section" onclick="enterPrismaKeys('modos_griegos', event)" disabled title="Primero presioná ENCENDIDO/APAGADO (E/A)">MODOS GRIEGOS</button>
+        <!-- "MODOS GRIEGOS" ELIMINADO de la pantalla de inicio a pedido EXPLÍCITO del usuario: sus 3 géneros de
+             Arquitas ahora viven en Características del Sonido > Escala Musical > "Modos Griegos (Archytas)", donde
+             suenan con las razones exactas. El código de la sección (#greekModesContainer) queda dormido en el
+             archivo, sin ningún acceso desde la interfaz. -->
         <!-- "CÍRCULO DE DIESIS" (nueva sección, ver el comentario grande de #diesisCircleContainer
              en <style>): a pedido EXPLÍCITO del usuario ("sección independiente nueva") iba DEBAJO
              de "MODOS GRIEGOS" -- mismo patrón ".home-btn-section" que esa (arranca "disabled",
@@ -2710,10 +2764,9 @@
              display:none. -->
         <button type="button" class="home-btn home-btn-section" style="display:none" onclick="enterPrismaKeys('circulo_diesis', event)" disabled title="Primero presioná ENCENDIDO/APAGADO (E/A)">CÍRCULO DE DIESIS</button>
     </div>
-    <!-- VISTA: Automática (detecta tableta/pantalla chica) / Compacta / Completa -- ver
-         applyViewMode() en el script. Recordada entre visitas. -->
+    <!-- La VISTA COMPACTA es ahora la interfaz ÚNICA de PrismaKeys (a pedido del usuario): se eliminaron
+         la vista completa y el botón "VISTA" que alternaba entre ambas. -->
     <div class="home-extra-btns">
-        <button type="button" class="home-viewmode-btn js-viewmode-btn" id="homeViewModeBtn" onclick="cycleViewMode()">VISTA: AUTOMÁTICA</button>
         <button type="button" class="home-viewmode-btn js-fs-btn" onclick="toggleFullscreen()">⛶ PANTALLA COMPLETA</button>
     </div>
 </div>
@@ -2726,23 +2779,312 @@
      togglePrismaRecording) -- ninguna lógica nueva de sonido. "AJUSTES" abre la cabecera completa de
      siempre como un cajón. -->
 <div id="compactBar" class="compact-bar" role="toolbar" aria-label="Barra compacta">
-    <button type="button" id="compactMenuBtn" onclick="toggleCompactMenu()" aria-expanded="false">☰ AJUSTES</button>
     <button type="button" class="cb-home" onclick="goToHomeScreen()">INICIO</button>
-    <button type="button" class="cb-perf" onclick="toggleVisualMode()" aria-label="Cambiar al siguiente modo de performance">PERFORMANCE ▶</button>
+    <!-- PERFORMANCE: despliega la lista de performances disponibles (se arma al abrir a partir de las filas de
+         #dd-visualmode, que ya no se muestra en AJUSTES) -- ver toggleCompactPerfMenu() en el script. La tecla V
+         sigue pasando al siguiente modo. -->
+    <div class="cb-perf-wrap">
+        <button type="button" class="cb-perf" id="compactPerfBtn" onclick="toggleCompactPerfMenu(event)" aria-haspopup="true" aria-expanded="false" aria-label="Elegir performance">PERFORMANCE ▾</button>
+        <ul id="compactPerfMenu" class="cb-perf-menu" role="listbox" aria-label="Performances disponibles"></ul>
+    </div>
+    <!-- SONIDOS: botón propio en la barra principal (a pedido EXPLÍCITO del usuario). Reúne lo que antes estaba repartido
+         en AJUSTES: la lista "Sonido" de CARACTERÍSTICAS DEL SONIDO (#dd-soundlist/#dd-sound), "MIDI" (#dd-midi-in),
+         "INSTRUMENTO GM" (#dd-gm-instrument) y "EFECTOS DE AUDIO" (#dd-fx). Son los MISMOS controles reales (mismos ids y
+         funciones), solo mudados de lugar; cada uno se abre como acordeón dentro de este panel. Ver toggleCompactSoundsMenu(). -->
+    <div class="cb-sounds-wrap">
+        <button type="button" class="cb-sounds" id="compactSoundsBtn" onclick="toggleCompactSoundsMenu(event)" aria-haspopup="true" aria-expanded="false" aria-label="Sonidos: sonido, MIDI, instrumento GM y efectos de audio">SONIDOS ▾</button>
+        <div id="compactSoundsMenu" class="cb-sounds-menu" role="group" aria-label="Sonidos">
+            <div class="control-box dropdown" id="dd-soundlist">
+                <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-soundlist')" aria-haspopup="listbox" aria-expanded="false" aria-label="Lista de sonidos">SONIDO</button>
+                <ul class="dropdown-menu" id="dd-sound" role="listbox" aria-label="Opciones de sonido">
+                <li role="option" data-value="piano" class="active" onclick="chooseDropdownOption('dd-sound','sound','piano', event)">Piano (Cuerda Percutida)</li>
+                <li role="option" data-value="crystal" onclick="chooseDropdownOption('dd-sound','sound','crystal', event)">Cristal (Gotas de Cristal)</li>
+                <li role="option" data-value="angel" onclick="chooseDropdownOption('dd-sound','sound','angel', event)">Voces Angelicales (Coro Etéreo)</li>
+                <li role="option" data-value="ep" onclick="chooseDropdownOption('dd-sound','sound','ep', event)">PIANO EP (Eléctrico)</li>
+                <li role="option" data-value="gm" onclick="chooseDropdownOption('dd-sound','sound','gm', event)">GM: Instrumento Sampleado</li>
+                </ul>
+            </div>
+            <!-- ENTRADA MIDI (#dd-midi-in): antes el programa escuchaba TODOS los dispositivos MIDI
+                 conectados en cuanto se otorgaba el permiso, sin ninguna forma de elegir uno en particular
+                 ni de desconectarse a propósito -- a pedido del usuario, ahora es un selector real: pide
+                 acceso explícitamente (botón dentro del propio desplegable, además del pedido automático
+                 de siempre al encender, ver togglePower()), lista los dispositivos de entrada disponibles
+                 (se reconstruye sola si se conecta/desconecta uno en caliente, ver
+                 requestMidiInputAccess()/midiAccess.onstatechange), permite elegir una entrada puntual
+                 (por ejemplo el puerto MIDI virtual que recibe la reproducción de un programa externo como
+                 Sibelius, en vez de mezclarla con un teclado MIDI real conectado al mismo tiempo) o volver
+                 a "Todas las Entradas", y desconectar sin perder el permiso ya otorgado por el navegador
+                 (Web MIDI no tiene forma de "revocar" ese permiso desde la página -- desconectar acá solo
+                 significa "no escuches a nadie ahora mismo", ver disconnectMidiInput()). El botón
+                 conserva el id "midi-out-status" de siempre: sigue siendo el único lugar donde se escribe
+                 el estado de MIDI (ver updateMidiInStatusLabel()/syncCircleMidiStatus()). -->
+            <div class="control-box dropdown" id="dd-midi-in">
+                <button type="button" class="select-tonic dropdown-toggle" id="midi-out-status" onclick="toggleDropdown('dd-midi-in')" aria-haspopup="listbox" aria-expanded="false" aria-label="Entrada MIDI: pedir acceso, elegir dispositivo o desconectar">MIDI: SIN ACCESO</button>
+                <ul class="dropdown-menu" id="sub-midi-in" role="listbox" aria-label="Dispositivos MIDI de entrada disponibles">
+                    <li role="option" data-value="request">SOLICITAR ACCESO MIDI</li>
+                </ul>
+            </div>
+
+            <!-- "INSTRUMENTO GM" (#dd-gm-instrument): elige uno de los 128 instrumentos SAMPLEADOS del set
+                 General MIDI 1 (motor gmSynth vía spessasynth_lib, ver el script) en vez de los 4 timbres
+                 sintéticos de osciladores de "CARACTERÍSTICAS DEL SONIDO". El acordeón de 16 familias x 8
+                 instrumentos se genera en JS (buildGMInstrumentMenu(), a partir de GM_INSTRUMENT_FAMILIES)
+                 para no escribir 128 <li> a mano acá. Elegir cualquier instrumento cambia el timbre activo a
+                 "gm" (ver chooseGMInstrument()). El selector de archivo de más abajo (fuera del acordeón,
+                 siempre visible mientras el cuadro está abierto) es OBLIGATORIO para escuchar sonido real:
+                 no hay ninguna URL de SoundFont fija incluida -- ver el comentario de
+                 loadGMSoundFontFile()/ensureGMLibLoaded() en el script para el porqué. Mientras no se cargue
+                 ninguno, elegir un instrumento GM no deja las teclas mudas: PRISMA KEYS sigue sonando con el
+                 piano de siempre hasta que haya un SoundFont activo (ver gmVoiceActive en playNote()). -->
+            <div class="control-box dropdown" id="dd-gm-instrument">
+                <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-gm-instrument')" aria-haspopup="true" aria-expanded="false" aria-label="Instrumento GM: elegir un instrumento sampleado del set General MIDI y cargar el SoundFont">INSTRUMENTO GM</button>
+                <ul class="dropdown-menu" role="menu" aria-label="Cargar SoundFont e instrumentos General MIDI">
+                    <li class="gm-sf-row" onclick="event.stopPropagation()">
+                        <label for="gm-sf-file">CARGAR SOUNDFONT (.sf2 / .sf3)</label>
+                        <input type="file" id="gm-sf-file" accept=".sf2,.sf3" onchange="loadGMSoundFontFile(event)">
+                        <div id="gm-sf-status">SIN SOUNDFONT CARGADO -- SE SIGUE ESCUCHANDO EL PIANO DE SIEMPRE</div>
+                    </li>
+                    <li class="gm-list-wrapper">
+                        <ul class="gm-family-list" id="dd-gm-list" role="listbox" aria-label="Familias de instrumentos General MIDI">
+                            <!-- Generado en buildGMInstrumentMenu() (ver script), a partir de GM_INSTRUMENT_FAMILIES -->
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- "EFECTOS DE AUDIO" (#dd-fx): Ecualizador de 3 bandas, Coro y Delay/Eco -- los 3 procesan
+                 TODO lo que suena por igual (osciladores clásicos y el motor GM de arriba, ver su cableado
+                 real en togglePower()). A diferencia de cualquier otro cuadro del programa, estas categorías
+                 no abren una lista de OPCIONES para elegir una sola -- llevan controles deslizantes
+                 (<input type="range">, ver .fx-slider-row en <style>) porque son parámetros continuos, no
+                 una elección entre unas pocas alternativas fijas. Cada control llama directo a su función
+                 (setEQBand/setChorusMix/setDelayTime/setDelayMix, ver el script) al arrastrarlo; el cuadro
+                 NO se cierra solo al tocar un control (a diferencia de chooseDropdownOption()), para poder
+                 ajustar varios seguidos sin que la lista se cierre en el medio. Los tres arrancan en su
+                 posición NEUTRA (0dB / 0% / 0%) -- el sonido no cambia ni un poco hasta que la persona misma
+                 suba algo. -->
+            <div class="control-box dropdown" id="dd-fx">
+                <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-fx')" aria-haspopup="true" aria-expanded="false" aria-label="Efectos de audio: ecualizador, coro y delay/eco">EFECTOS DE AUDIO</button>
+                <ul class="dropdown-menu" role="menu" aria-label="Categorías de efectos de audio">
+                    <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Ecualizador
+                        <ul class="dropdown-menu dropdown-submenu" role="group" aria-label="Ecualizador de 3 bandas">
+                            <li class="fx-slider-row" onclick="event.stopPropagation()">
+                                <div class="fx-label"><span>Graves</span><span id="eq-low-val">+0 dB</span></div>
+                                <input type="range" min="-12" max="12" step="1" value="0" oninput="setEQBand('low', this.value)">
+                            </li>
+                            <li class="fx-slider-row" onclick="event.stopPropagation()">
+                                <div class="fx-label"><span>Medios</span><span id="eq-mid-val">+0 dB</span></div>
+                                <input type="range" min="-12" max="12" step="1" value="0" oninput="setEQBand('mid', this.value)">
+                            </li>
+                            <li class="fx-slider-row" onclick="event.stopPropagation()">
+                                <div class="fx-label"><span>Agudos</span><span id="eq-high-val">+0 dB</span></div>
+                                <input type="range" min="-12" max="12" step="1" value="0" oninput="setEQBand('high', this.value)">
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Coro (Chorus)
+                        <ul class="dropdown-menu dropdown-submenu" role="group" aria-label="Coro / Chorus">
+                            <li class="fx-slider-row" onclick="event.stopPropagation()">
+                                <div class="fx-label"><span>Intensidad</span><span id="chorus-val">0%</span></div>
+                                <input type="range" min="0" max="100" step="1" value="0" oninput="setChorusMix(this.value)">
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Delay / Eco
+                        <ul class="dropdown-menu dropdown-submenu" role="group" aria-label="Delay / Eco">
+                            <li class="fx-slider-row" onclick="event.stopPropagation()">
+                                <div class="fx-label"><span>Tiempo</span><span id="delay-time-val">300 ms</span></div>
+                                <input type="range" min="50" max="800" step="10" value="300" oninput="setDelayTime(this.value)">
+                            </li>
+                            <li class="fx-slider-row" onclick="event.stopPropagation()">
+                                <div class="fx-label"><span>Mezcla</span><span id="delay-mix-val">0%</span></div>
+                                <input type="range" min="0" max="100" step="1" value="0" oninput="setDelayMix(this.value)">
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!-- ACTUACIÓN: botón propio en la barra principal (a pedido EXPLÍCITO del usuario). Reúne, en este orden: 1) "Escala Musical"
+         (antes categoría de CARACTERÍSTICAS DEL SONIDO), 2) "Escalera de colores", 3) "Pivotes automáticos" y 4) "Repertorio sonoro".
+         Son los MISMOS controles reales (mismos ids y funciones), solo mudados de lugar. Ver toggleCompactActMenu(). -->
+    <div class="cb-sounds-wrap cb-act-wrap">
+        <button type="button" class="cb-act" id="compactActBtn" onclick="toggleCompactActMenu(event)" aria-haspopup="true" aria-expanded="false" aria-label="Actuación: escala musical, escalera de colores, pivotes automáticos y repertorio sonoro">ACTUACIÓN ▾</button>
+        <div id="compactActMenu" class="cb-sounds-menu cb-act-menu" role="group" aria-label="Actuación">
+    <!-- "Escala Musical" (categoría nueva) -- a pedido EXPLÍCITO del usuario ("la lista de
+         escalas exoticas del 'circulo de diesis' quiero que se integre a 'toca con colores'
+         como nueva opcion dentro de 'caracteristicas del sonido' con el titulo 'escala
+         musical'"): mismo listado EXACTO que #dcExoticScaleSelect en Círculo de Diesis (ver
+         DIESIS_EXOTIC_SCALES/chooseSoundcharExoticScale() en el script), acá aplicado sobre
+         las 12 teclas fijas del teclado principal en vez de sobre los pasos de una diesis.
+         Elegir una escala BLOQUEA (deja mudas) las teclas que no le pertenecen -- mismo
+         criterio de bloqueo total que Círculo de Diesis, confirmado explícitamente con la
+         persona antes de implementar esto -- de forma TOTALMENTE INDEPENDIENTE del bloqueo
+         de "Selección por Lienzo" (#dd-colorlock): los dos se pueden usar juntos y sus
+         restricciones se SUMAN, también confirmado explícitamente en vez de asumir que uno
+         debía apagar al otro. "-- Selección manual (sin bloqueo) --" (primera opción) libera
+         este bloqueo sin tocar "Selección por Lienzo" para nada. -->
+    <div class="control-box dropdown" id="dd-escalamusical">
+        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-escalamusical')" aria-haspopup="listbox" aria-expanded="false" aria-label="Escala musical: bloquea las teclas del piano que no pertenecen a la escala elegida">ESCALA MUSICAL</button>
+        <ul class="dropdown-menu" id="sub-exoticscale" role="listbox" aria-label="Escala musical: bloquea las teclas del piano que no pertenecen a la escala elegida">
+                    <li role="option" data-value="" class="active" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','', event)">-- Selección manual (sin bloqueo) --</li>
+                    <!-- Medio Oriente / Mediterráneo -->
+                    <li role="option" data-value="arabe" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','arabe', event)">Escala Árabe (Doble Armónica)</li>
+                    <li role="option" data-value="hijaz" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','hijaz', event)">Maqam Hijaz</li>
+                    <li role="option" data-value="persa" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','persa', event)">Escala Persa</li>
+                    <li role="option" data-value="bizantina_menor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','bizantina_menor', event)">Escala Bizantina Menor (Ahava Raba)</li>
+                    <!-- Gitana / Europa del Este -->
+                    <li role="option" data-value="hungara_menor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','hungara_menor', event)">Escala Húngara Menor (Gitana)</li>
+                    <li role="option" data-value="hungara_mayor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','hungara_mayor', event)">Escala Húngara Mayor</li>
+                    <li role="option" data-value="bulgara_aumentada" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','bulgara_aumentada', event)">Escala Búlgara (Aumentada)</li>
+                    <!-- Asia Oriental -->
+                    <li role="option" data-value="hirajoshi" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','hirajoshi', event)">Escala Japonesa Hirajoshi</li>
+                    <li role="option" data-value="in_sen" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','in_sen', event)">Escala Japonesa In Sen</li>
+                    <li role="option" data-value="iwato" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','iwato', event)">Escala Japonesa Iwato</li>
+                    <li role="option" data-value="china_mayor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','china_mayor', event)">Escala China (Pentatónica Mayor)</li>
+                    <li role="option" data-value="egipcia" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','egipcia', event)">Escala Egipcia (Pentatónica Suspendida)</li>
+                    <!-- Sintéticas / Siglo XX -->
+                    <li role="option" data-value="napolitana_menor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','napolitana_menor', event)">Escala Napolitana Menor</li>
+                    <li role="option" data-value="napolitana_mayor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','napolitana_mayor', event)">Escala Napolitana Mayor</li>
+                    <li role="option" data-value="enigmatica" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','enigmatica', event)">Escala Enigmática</li>
+                    <li role="option" data-value="tonos_enteros" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','tonos_enteros', event)">Escala de Tonos Enteros</li>
+                    <li role="option" data-value="octatonica_th" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','octatonica_th', event)">Escala Octatónica (Tono-Semitono)</li>
+                    <li role="option" data-value="octatonica_ht" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','octatonica_ht', event)">Escala Octatónica (Semitono-Tono)</li>
+                    <li role="option" data-value="bebop_dominante" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','bebop_dominante', event)">Escala Bebop Dominante</li>
+                    <!-- Pentatónica / Blues -->
+                    <li role="option" data-value="pentatonica_menor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','pentatonica_menor', event)">Escala Pentatónica Menor</li>
+                    <li role="option" data-value="blues" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','blues', event)">Escala de Blues</li>
+                    <!-- "Escalas Modales" (sub-categoría anidada dentro de "Escala Musical") -- a pedido
+                         EXPLÍCITO del usuario ("añade a la lista de 'escala musical' la opcion 'escalas
+                         modales' para abrir un sub menu con la lista de las 7 escalas liturgicas: jonico,
+                         dorico, frigio, lidio, mixolidio, eolico y locrio"). Reusa TAL CUAL el mismo
+                         mecanismo de bloqueo que el resto de "Escala Musical" (DIESIS_EXOTIC_SCALES +
+                         chooseSoundcharExoticScale(), ver más abajo en el script) -- acá simplemente se
+                         agrega un nivel más de anidamiento (categoría dentro de categoría), soportado sin
+                         cambios adicionales de CSS/JS porque .dropdown-category/.dropdown-submenu ya está
+                         diseñado para profundidad arbitraria (ver comentario en el CSS de estas reglas). -->
+                    <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Escalas Modales
+                        <ul class="dropdown-menu dropdown-submenu" id="sub-modalscales" role="listbox" aria-label="Escalas modales (modos griegos/eclesiásticos): bloquea las teclas del piano que no pertenecen al modo elegido">
+                            <li role="option" data-value="modo_jonico" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_jonico', event)">Jónico (Escala Mayor)</li>
+                            <li role="option" data-value="modo_dorico" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_dorico', event)">Dórico</li>
+                            <li role="option" data-value="modo_frigio" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_frigio', event)">Frigio</li>
+                            <li role="option" data-value="modo_lidio" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_lidio', event)">Lidio</li>
+                            <li role="option" data-value="modo_mixolidio" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_mixolidio', event)">Mixolidio</li>
+                            <li role="option" data-value="modo_eolico" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_eolico', event)">Eólico (Menor Natural)</li>
+                            <li role="option" data-value="modo_locrio" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_locrio', event)">Locrio</li>
+                        </ul>
+                    </li>
+                    <!-- "Modos Griegos (Archytas)" (sub-categoría anidada dentro de "Escala Musical") -- a
+                         pedido EXPLÍCITO del usuario ("el 'genero (tetracordio)' de modos griegos con sus
+                         tres opciones integralo a 'escala musical' con el titulo 'modos griegos
+                         (archytas)'"): mismas TRES opciones EXACTAS que #gmGenusSelect en MODOS GRIEGOS
+                         (diatónico/cromático/enarmónico de Arquitas, ver GREEK_GENUS_RATIOS/
+                         greekGenusToExoticScaleEntry() en el script), reusando el mismo bloqueo de
+                         "Escala Musical" que el resto de esta lista, de forma TOTALMENTE INDEPENDIENTE
+                         del selector propio de MODOS GRIEGOS (ese motor autónomo no se toca para nada). -->
+                    <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Modos Griegos (Archytas)
+                        <ul class="dropdown-menu dropdown-submenu" id="sub-greekgenus" role="listbox" aria-label="Modos Griegos (Archytas): bloquea las teclas del piano que no pertenecen al género elegido">
+                            <li role="option" data-value="griego_diatonico" onclick="chooseDropdownOption('sub-greekgenus','greekgenus','griego_diatonico', event)">Diatónico (28:27 · 8:7 · 9:8)</li>
+                            <li role="option" data-value="griego_cromatico" onclick="chooseDropdownOption('sub-greekgenus','greekgenus','griego_cromatico', event)">Cromático (28:27 · 243:224 · 32:27)</li>
+                            <li role="option" data-value="griego_enarmonico" onclick="chooseDropdownOption('sub-greekgenus','greekgenus','griego_enarmonico', event)">Enarmónico (28:27 · 36:35 · 5:4)</li>
+                        </ul>
+                    </li>
+                </ul>
+    </div>
+    <!-- "ESCALERA DE COLORES" (#dd-colorlock): acordeón de 2 categorías, mismo patrón que
+         "CARACTERÍSTICAS DEL SONIDO"/"APRENDIZAJE MUSICAL". "Modo de Bloqueo" es la elección
+         original: "Selección por Lienzo" silencia cualquier nota que no pertenezca a la escala
+         activa -- ni siquiera crea sonido, venga de un clic en el piano de pantalla, de un teclado
+         MIDI real o de Sibelius (ver el chequeo al principio de playNote(), el único lugar por el
+         que pasan los tres) -- y "Libre" es el comportamiento de siempre. "Variante de Menor" (a
+         pedido del usuario) solo importa con las dos condiciones a la vez (Menor Relativo elegido
+         en CARACTERÍSTICAS DEL SONIDO, y "Selección por Lienzo" activo acá mismo), y cada opción
+         maneja su nota extra distinto: "Menor Armónica" REEMPLAZA la 7ª menor -- deja de sonar y de
+         pintarse -- por la 7ª mayor/sensible; "Menor Melódica" en cambio es ADITIVA -- la 6ª y 7ª
+         menores de siempre siguen sonando y pintándose igual, y la 6ª/7ª mayores se SUMAN como
+         notas extra permitidas, sin sacar ninguna. Ver MINOR_VARIANT_REL_OVERRIDE/
+         isAllowedByColorScaleLock()/isColoredAsInScale() en el script para el detalle exacto. -->
+    <div class="control-box dropdown" id="dd-colorlock">
+        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-colorlock')" aria-haspopup="true" aria-expanded="false" aria-label="Escalera de colores: restringir el sonido a solo las teclas de la escala activa, y variante de menor para la selección por lienzo">ESCALERA DE COLORES</button>
+        <ul class="dropdown-menu" role="menu" aria-label="Categorías de escalera de colores">
+            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Modo de Bloqueo
+                <ul class="dropdown-menu dropdown-submenu" id="sub-colorlock" role="listbox" aria-label="Modo de bloqueo por escala">
+                    <li role="option" data-value="lienzo" onclick="chooseColorLockMode('lienzo', event)">Selección por Lienzo</li>
+                    <li role="option" data-value="libre" class="active" onclick="chooseColorLockMode('libre', event)">Libre</li>
+                </ul>
+            </li>
+            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Variante de Menor
+                <ul class="dropdown-menu dropdown-submenu" id="sub-minorvariant" role="listbox" aria-label="Variante de la escala menor para Selección por Lienzo">
+                    <li role="option" data-value="natural" class="active" onclick="chooseMinorScaleVariant('natural', event)">Natural (Eólica)</li>
+                    <li role="option" data-value="harmonic" onclick="chooseMinorScaleVariant('harmonic', event)">Menor Armónica (7ª mayor en vez de menor)</li>
+                    <li role="option" data-value="melodic" onclick="chooseMinorScaleVariant('melodic', event)">Menor Melódica (+6ª y 7ª mayores)</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- "REPERTORIO SONORO" (#dd-repertoire, ver script chooseRepertoireEra()/getEraAwareCandidateKeys()):
+         elige uno de los 10 momentos históricos descritos en armonia_musical_por_periodos.md. Cada
+         período AJUSTA las reglas del sistema de pivotes automáticos (qué tonalidades vecinas se
+         consideran candidatas, qué variante de menor se fuerza, qué acordes cuentan como pivote) --
+         Selección por Lienzo, Mayor/Menor, etc. siguen funcionando exactamente igual por debajo.
+         "Ninguno" es el comportamiento general de siempre (el que ya existía antes de este bloque).
+         Solo Barroco/Clasicismo/Romanticismo están implementados por ahora; el resto queda marcado
+         "(próximamente)" y no cambia nada al elegirse -- se van a ir completando por secciones. -->
+    <!-- "PIVOTES AUTOMÁTICOS" (#autoPivotModeBtn, ver script toggleAutoPivotMode()/isAutoPivotModeOn()):
+         a pedido EXPLÍCITO del usuario ("quiero simplificar el modo de reconocimiento de pivotes a
+         un solo paso, un solo botón que haga todo el cambio") -- antes, activar el reconocimiento de
+         pivotes en vivo (ver isPivotDetectionActive() en el script) exigía tocar DOS cuadros
+         separados y en el orden correcto ("ESCALERA DE COLORES" -> "Selección por Lienzo" Y "Color
+         de Lienzo" -> "Fondo del Lienzo" -> alguna "Tonalidad Fija"), con el riesgo extra de dejar
+         paintBgFixedTonic (la tonalidad del FONDO) apuntando a una tonalidad distinta de
+         currentTonicOffset (la tonalidad MUSICAL real) si se elegían por separado sin fijarse. Este
+         botón hace las dos cosas de una sola vez, sincronizadas contra la tonalidad YA elegida --
+         "Repertorio Sonoro" (siguiente cuadro) y "Variante de Menor" quedan tal cual estén, son
+         ajustes finos opcionales que no hace falta tocar para que el reconocimiento funcione. A
+         pedido EXPLÍCITO del usuario, apagarlo NO intenta recordar qué había antes -- siempre vuelve
+         a los valores por defecto de siempre (Modo de Bloqueo: Libre, Fondo del Lienzo: Automático). -->
+    <div class="control-box" id="dd-autopivot">
+        <button type="button" class="select-tonic dropdown-toggle" id="autoPivotModeBtn" onclick="toggleAutoPivotMode(event)" aria-pressed="false" aria-label="Pivotes automáticos: activa de una sola vez Selección por Lienzo y Fondo del Lienzo en Tonalidad Fija, sincronizados con la tonalidad activa">PIVOTES AUTOMÁTICOS</button>
+    </div>
+    <div class="control-box dropdown" id="dd-repertoire">
+        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-repertoire')" aria-haspopup="listbox" aria-expanded="false" aria-label="Repertorio sonoro: ajusta las reglas de los pivotes automáticos según el período histórico">REPERTORIO SONORO</button>
+        <ul class="dropdown-menu" role="listbox" aria-label="Período histórico">
+            <li role="option" data-value="ninguno" class="active" onclick="chooseRepertoireEra('ninguno', event)">Ninguno (comportamiento general)</li>
+            <li role="option" data-value="medieval" onclick="chooseRepertoireEra('medieval', event)">Medieval (próximamente)</li>
+            <li role="option" data-value="renacimiento" onclick="chooseRepertoireEra('renacimiento', event)">Renacimiento (próximamente)</li>
+            <li role="option" data-value="barroco" onclick="chooseRepertoireEra('barroco', event)">Barroco</li>
+            <li role="option" data-value="clasico" onclick="chooseRepertoireEra('clasico', event)">Clasicismo</li>
+            <li role="option" data-value="romantico" onclick="chooseRepertoireEra('romantico', event)">Romanticismo</li>
+            <li role="option" data-value="posromantico" onclick="chooseRepertoireEra('posromantico', event)">Posromanticismo (próximamente)</li>
+            <li role="option" data-value="impresionismo" onclick="chooseRepertoireEra('impresionismo', event)">Impresionismo (próximamente)</li>
+            <li role="option" data-value="modernismo" onclick="chooseRepertoireEra('modernismo', event)">Modernismo del s. XX (próximamente)</li>
+            <li role="option" data-value="jazz" onclick="chooseRepertoireEra('jazz', event)">Jazz (próximamente)</li>
+            <li role="option" data-value="popular" onclick="chooseRepertoireEra('popular', event)">Popular/Contemporáneo (próximamente)</li>
+        </ul>
+    </div>
+        </div>
+    </div>
     <button type="button" id="compactPanelsBtn" onclick="toggleCompactPanels()">INFO</button>
     <button type="button" id="compactPianoBtn" onclick="toggleCompactPiano()">PIANO</button>
     <span class="cb-spacer"></span>
-    <button type="button" class="cb-first-right" onclick="clearScreenButton(event)">LIMPIAR</button>
-    <button type="button" class="cb-danger" onclick="panicReset()">RESETEO</button>
-    <button type="button" class="cb-danger" id="compactRecBtn" onclick="togglePrismaRecording()">● GRABAR</button>
+    <!-- Grupo derecho (AJUSTES junto a LIMPIAR): se mueve junto como una sola unidad si la barra tiene que pasar a 2 filas. -->
+    <div class="cb-right">
+        <!-- ALTERACIONES (antes categoría en CARACTERÍSTICAS DEL SONIDO): "#" = sostenidos, "b" = bemoles; cada toque alterna (igual que la tecla N). -->
+        <button type="button" id="compactNotationBtn" class="cb-notation" onclick="toggleNotation()" aria-label="Alteraciones: sostenidos (#) o bemoles (b). Tocar para alternar" title="Alteraciones: # sostenidos / b bemoles">#</button>
+        <button type="button" id="compactMenuBtn" onclick="toggleCompactMenu()" aria-expanded="false">☰ AJUSTES</button>
+        <button type="button" onclick="clearScreenButton(event)">LIMPIAR</button>
+        <button type="button" class="cb-danger" onclick="panicReset()">RESETEO</button>
+        <button type="button" class="cb-danger" id="compactRecBtn" onclick="togglePrismaRecording()">● GRABAR</button>
+    </div>
     <button type="button" id="compactExitBtn" onclick="exitCompactImmersive()">✕ SALIR</button>
 </div>
 
 <div class="header-controls">
     <!-- Solo se ven en vista compacta (ver .btn-fullscreen-compact en <style>): pantalla completa del
-         navegador (gana el espacio de la barra de direcciones) y el selector de vista. -->
+         navegador (gana el espacio de la barra de direcciones). -->
     <button type="button" class="btn-fullscreen-compact js-fs-btn" onclick="toggleFullscreen()">⛶ PANTALLA COMPLETA</button>
-    <button type="button" class="btn-fullscreen-compact js-viewmode-btn" onclick="cycleViewMode()">VISTA: AUTOMÁTICA</button>
     <!-- "MENÚ PRINCIPAL" (goToHomeScreen(), ver el script y el comentario junto a .btn-home en
          <style>): primer botón de la cabecera para que sea fácil de encontrar volviendo desde
          cualquier parte del programa. -->
@@ -2907,100 +3249,6 @@
                     <li role="option" data-value="diesis_archytas" onclick="chooseDropdownOption('dd-tuning','tuning','diesis_archytas', event)">Diesis de Arquitas (36:35, 12 Notas Más Cercanas)</li>
                     <li role="option" data-value="diesis_classic5limit" onclick="chooseDropdownOption('dd-tuning','tuning','diesis_classic5limit', event)">Diesis Clásica de 5 Límites (128:125, 12 Notas Más Cercanas)</li>
                     <li role="option" data-value="diesis_edo31" onclick="chooseDropdownOption('dd-tuning','tuning','diesis_edo31', event)">31-EDO (Diesis de Fokker, 12 Notas Más Cercanas)</li>
-                </ul>
-            </li>
-            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Sonido
-                <ul class="dropdown-menu dropdown-submenu" id="dd-sound" role="listbox" aria-label="Opciones de sonido">
-                    <li role="option" data-value="piano" class="active" onclick="chooseDropdownOption('dd-sound','sound','piano', event)">Piano (Cuerda Percutida)</li>
-                    <li role="option" data-value="crystal" onclick="chooseDropdownOption('dd-sound','sound','crystal', event)">Cristal (Gotas de Cristal)</li>
-                    <li role="option" data-value="angel" onclick="chooseDropdownOption('dd-sound','sound','angel', event)">Voces Angelicales (Coro Etéreo)</li>
-                    <li role="option" data-value="ep" onclick="chooseDropdownOption('dd-sound','sound','ep', event)">PIANO EP (Eléctrico)</li>
-                    <li role="option" data-value="gm" onclick="chooseDropdownOption('dd-sound','sound','gm', event)">GM: Instrumento Sampleado</li>
-                </ul>
-            </li>
-            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Alteraciones
-                <ul class="dropdown-menu dropdown-submenu" id="dd-notation" role="listbox" aria-label="Opciones de notación">
-                    <li role="option" data-value="sharp" class="active" onclick="chooseDropdownOption('dd-notation','notation','sharp', event)">♯ Sostenidos</li>
-                    <li role="option" data-value="flat" onclick="chooseDropdownOption('dd-notation','notation','flat', event)">♭ Bemoles</li>
-                </ul>
-            </li>
-            <!-- "Escala Musical" (categoría nueva) -- a pedido EXPLÍCITO del usuario ("la lista de
-                 escalas exoticas del 'circulo de diesis' quiero que se integre a 'toca con colores'
-                 como nueva opcion dentro de 'caracteristicas del sonido' con el titulo 'escala
-                 musical'"): mismo listado EXACTO que #dcExoticScaleSelect en Círculo de Diesis (ver
-                 DIESIS_EXOTIC_SCALES/chooseSoundcharExoticScale() en el script), acá aplicado sobre
-                 las 12 teclas fijas del teclado principal en vez de sobre los pasos de una diesis.
-                 Elegir una escala BLOQUEA (deja mudas) las teclas que no le pertenecen -- mismo
-                 criterio de bloqueo total que Círculo de Diesis, confirmado explícitamente con la
-                 persona antes de implementar esto -- de forma TOTALMENTE INDEPENDIENTE del bloqueo
-                 de "Selección por Lienzo" (#dd-colorlock): los dos se pueden usar juntos y sus
-                 restricciones se SUMAN, también confirmado explícitamente en vez de asumir que uno
-                 debía apagar al otro. "-- Selección manual (sin bloqueo) --" (primera opción) libera
-                 este bloqueo sin tocar "Selección por Lienzo" para nada. -->
-            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Escala Musical
-                <ul class="dropdown-menu dropdown-submenu" id="sub-exoticscale" role="listbox" aria-label="Escala musical: bloquea las teclas del piano que no pertenecen a la escala elegida">
-                    <li role="option" data-value="" class="active" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','', event)">-- Selección manual (sin bloqueo) --</li>
-                    <!-- Medio Oriente / Mediterráneo -->
-                    <li role="option" data-value="arabe" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','arabe', event)">Escala Árabe (Doble Armónica)</li>
-                    <li role="option" data-value="hijaz" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','hijaz', event)">Maqam Hijaz</li>
-                    <li role="option" data-value="persa" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','persa', event)">Escala Persa</li>
-                    <li role="option" data-value="bizantina_menor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','bizantina_menor', event)">Escala Bizantina Menor (Ahava Raba)</li>
-                    <!-- Gitana / Europa del Este -->
-                    <li role="option" data-value="hungara_menor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','hungara_menor', event)">Escala Húngara Menor (Gitana)</li>
-                    <li role="option" data-value="hungara_mayor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','hungara_mayor', event)">Escala Húngara Mayor</li>
-                    <li role="option" data-value="bulgara_aumentada" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','bulgara_aumentada', event)">Escala Búlgara (Aumentada)</li>
-                    <!-- Asia Oriental -->
-                    <li role="option" data-value="hirajoshi" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','hirajoshi', event)">Escala Japonesa Hirajoshi</li>
-                    <li role="option" data-value="in_sen" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','in_sen', event)">Escala Japonesa In Sen</li>
-                    <li role="option" data-value="iwato" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','iwato', event)">Escala Japonesa Iwato</li>
-                    <li role="option" data-value="china_mayor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','china_mayor', event)">Escala China (Pentatónica Mayor)</li>
-                    <li role="option" data-value="egipcia" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','egipcia', event)">Escala Egipcia (Pentatónica Suspendida)</li>
-                    <!-- Sintéticas / Siglo XX -->
-                    <li role="option" data-value="napolitana_menor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','napolitana_menor', event)">Escala Napolitana Menor</li>
-                    <li role="option" data-value="napolitana_mayor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','napolitana_mayor', event)">Escala Napolitana Mayor</li>
-                    <li role="option" data-value="enigmatica" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','enigmatica', event)">Escala Enigmática</li>
-                    <li role="option" data-value="tonos_enteros" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','tonos_enteros', event)">Escala de Tonos Enteros</li>
-                    <li role="option" data-value="octatonica_th" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','octatonica_th', event)">Escala Octatónica (Tono-Semitono)</li>
-                    <li role="option" data-value="octatonica_ht" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','octatonica_ht', event)">Escala Octatónica (Semitono-Tono)</li>
-                    <li role="option" data-value="bebop_dominante" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','bebop_dominante', event)">Escala Bebop Dominante</li>
-                    <!-- Pentatónica / Blues -->
-                    <li role="option" data-value="pentatonica_menor" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','pentatonica_menor', event)">Escala Pentatónica Menor</li>
-                    <li role="option" data-value="blues" onclick="chooseDropdownOption('sub-exoticscale','exoticscale','blues', event)">Escala de Blues</li>
-                    <!-- "Escalas Modales" (sub-categoría anidada dentro de "Escala Musical") -- a pedido
-                         EXPLÍCITO del usuario ("añade a la lista de 'escala musical' la opcion 'escalas
-                         modales' para abrir un sub menu con la lista de las 7 escalas liturgicas: jonico,
-                         dorico, frigio, lidio, mixolidio, eolico y locrio"). Reusa TAL CUAL el mismo
-                         mecanismo de bloqueo que el resto de "Escala Musical" (DIESIS_EXOTIC_SCALES +
-                         chooseSoundcharExoticScale(), ver más abajo en el script) -- acá simplemente se
-                         agrega un nivel más de anidamiento (categoría dentro de categoría), soportado sin
-                         cambios adicionales de CSS/JS porque .dropdown-category/.dropdown-submenu ya está
-                         diseñado para profundidad arbitraria (ver comentario en el CSS de estas reglas). -->
-                    <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Escalas Modales
-                        <ul class="dropdown-menu dropdown-submenu" id="sub-modalscales" role="listbox" aria-label="Escalas modales (modos griegos/eclesiásticos): bloquea las teclas del piano que no pertenecen al modo elegido">
-                            <li role="option" data-value="modo_jonico" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_jonico', event)">Jónico (Escala Mayor)</li>
-                            <li role="option" data-value="modo_dorico" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_dorico', event)">Dórico</li>
-                            <li role="option" data-value="modo_frigio" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_frigio', event)">Frigio</li>
-                            <li role="option" data-value="modo_lidio" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_lidio', event)">Lidio</li>
-                            <li role="option" data-value="modo_mixolidio" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_mixolidio', event)">Mixolidio</li>
-                            <li role="option" data-value="modo_eolico" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_eolico', event)">Eólico (Menor Natural)</li>
-                            <li role="option" data-value="modo_locrio" onclick="chooseDropdownOption('sub-modalscales','modalscale','modo_locrio', event)">Locrio</li>
-                        </ul>
-                    </li>
-                    <!-- "Modos Griegos (Archytas)" (sub-categoría anidada dentro de "Escala Musical") -- a
-                         pedido EXPLÍCITO del usuario ("el 'genero (tetracordio)' de modos griegos con sus
-                         tres opciones integralo a 'escala musical' con el titulo 'modos griegos
-                         (archytas)'"): mismas TRES opciones EXACTAS que #gmGenusSelect en MODOS GRIEGOS
-                         (diatónico/cromático/enarmónico de Arquitas, ver GREEK_GENUS_RATIOS/
-                         greekGenusToExoticScaleEntry() en el script), reusando el mismo bloqueo de
-                         "Escala Musical" que el resto de esta lista, de forma TOTALMENTE INDEPENDIENTE
-                         del selector propio de MODOS GRIEGOS (ese motor autónomo no se toca para nada). -->
-                    <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Modos Griegos (Archytas)
-                        <ul class="dropdown-menu dropdown-submenu" id="sub-greekgenus" role="listbox" aria-label="Modos Griegos (Archytas): bloquea las teclas del piano que no pertenecen al género elegido">
-                            <li role="option" data-value="griego_diatonico" onclick="chooseDropdownOption('sub-greekgenus','greekgenus','griego_diatonico', event)">Diatónico (28:27 · 8:7 · 9:8)</li>
-                            <li role="option" data-value="griego_cromatico" onclick="chooseDropdownOption('sub-greekgenus','greekgenus','griego_cromatico', event)">Cromático (28:27 · 243:224 · 32:27)</li>
-                            <li role="option" data-value="griego_enarmonico" onclick="chooseDropdownOption('sub-greekgenus','greekgenus','griego_enarmonico', event)">Enarmónico (28:27 · 36:35 · 5:4)</li>
-                        </ul>
-                    </li>
                 </ul>
             </li>
         </ul>
@@ -3249,17 +3497,10 @@
             <li role="option" data-value="4" onclick="chooseVisualMode('4')">MODE: LÍNEAS DE COLORES</li>
             <li role="option" data-value="5" onclick="chooseVisualMode('5')">MODE: PLASMA WAVE DELICATED</li>
             <li role="option" data-value="6" onclick="chooseVisualMode('6')">MODE: CUERDAS SONORAS</li>
-            <!-- ACUARELA (7) y BURBUJAS (8) -- a pedido EXPLÍCITO del usuario, se mudaron de "Mi
-                 Lienzo" (#dd-paint, más abajo, que las tenía como categorías propias con su propio
-                 Activado/Desactivado vía chooseSpecialVisualMode()) a esta lista plana, como
-                 cualquier otro modo de PERFORMANCE -- mismo patrón "tipo radio" que el resto de
-                 filas de acá (chooseVisualMode() -> setVisualMode(), sin on/off propio: elegir una
-                 las vuelve la única activa, sin recordar "el modo anterior"). FUEGO DE COLORES (que
-                 ocupaba el índice 9) se eliminó del todo en el mismo pedido -- ver el comentario
-                 grande junto a "let colorFlames" (ahora inexistente) más arriba en el script -- así
-                 que ONDAS SENOIDALES, más abajo, bajó del índice 10 al 9 para no dejar un hueco. -->
-            <li role="option" data-value="7" onclick="chooseVisualMode('7')">MODE: ACUARELA</li>
-            <li role="option" data-value="8" onclick="chooseVisualMode('8')">MODE: BURBUJAS</li>
+            <!-- ACUARELA (7) y BURBUJAS (8): ELIMINADAS de PERFORMANCE a pedido EXPLÍCITO del usuario.
+                 Ya no son elegibles desde ningún lado (lista, tecla V, ciclos de cada sección,
+                 setVisualMode()); los índices 7 y 8 quedan reservados -- no se renumeran los demás modos
+                 (9, 10 y 11) porque el resto del programa los usa por número. -->
             <!-- PEDIDO DEL USUARIO: "me gusta la parte visual de los sonidos (ondas senoidales)
                  ¿puedes agregarlo a 'tocar con colores' como nuevo modo de performance? solo
                  copiar, no eliminar del sintetizador dual" -- índice NUEVO al agregarse (10, al
@@ -3382,180 +3623,7 @@
         <button type="button" id="seq-step-fwd-btn" class="btn-alt playback-btn" onclick="seqStepNote(1)" aria-label="Mover el cabezal al ataque siguiente ya pintado" title="AVANZAR" style="display:none;">⏭</button>
         <button type="button" id="seq-go-start-btn" class="btn-alt playback-btn" onclick="seqGoToStart()" aria-label="Mover el cabezal al principio de lo pintado" title="IR AL INICIO" style="display:none;">⏮⏮</button>
     </div>
-    <!-- ENTRADA MIDI (#dd-midi-in): antes el programa escuchaba TODOS los dispositivos MIDI
-         conectados en cuanto se otorgaba el permiso, sin ninguna forma de elegir uno en particular
-         ni de desconectarse a propósito -- a pedido del usuario, ahora es un selector real: pide
-         acceso explícitamente (botón dentro del propio desplegable, además del pedido automático
-         de siempre al encender, ver togglePower()), lista los dispositivos de entrada disponibles
-         (se reconstruye sola si se conecta/desconecta uno en caliente, ver
-         requestMidiInputAccess()/midiAccess.onstatechange), permite elegir una entrada puntual
-         (por ejemplo el puerto MIDI virtual que recibe la reproducción de un programa externo como
-         Sibelius, en vez de mezclarla con un teclado MIDI real conectado al mismo tiempo) o volver
-         a "Todas las Entradas", y desconectar sin perder el permiso ya otorgado por el navegador
-         (Web MIDI no tiene forma de "revocar" ese permiso desde la página -- desconectar acá solo
-         significa "no escuches a nadie ahora mismo", ver disconnectMidiInput()). El botón
-         conserva el id "midi-out-status" de siempre: sigue siendo el único lugar donde se escribe
-         el estado de MIDI (ver updateMidiInStatusLabel()/syncCircleMidiStatus()). -->
-    <div class="control-box dropdown" id="dd-midi-in">
-        <button type="button" class="select-tonic dropdown-toggle" id="midi-out-status" onclick="toggleDropdown('dd-midi-in')" aria-haspopup="listbox" aria-expanded="false" aria-label="Entrada MIDI: pedir acceso, elegir dispositivo o desconectar">MIDI: SIN ACCESO</button>
-        <ul class="dropdown-menu" id="sub-midi-in" role="listbox" aria-label="Dispositivos MIDI de entrada disponibles">
-            <li role="option" data-value="request">SOLICITAR ACCESO MIDI</li>
-        </ul>
-    </div>
 
-    <!-- "INSTRUMENTO GM" (#dd-gm-instrument): elige uno de los 128 instrumentos SAMPLEADOS del set
-         General MIDI 1 (motor gmSynth vía spessasynth_lib, ver el script) en vez de los 4 timbres
-         sintéticos de osciladores de "CARACTERÍSTICAS DEL SONIDO". El acordeón de 16 familias x 8
-         instrumentos se genera en JS (buildGMInstrumentMenu(), a partir de GM_INSTRUMENT_FAMILIES)
-         para no escribir 128 <li> a mano acá. Elegir cualquier instrumento cambia el timbre activo a
-         "gm" (ver chooseGMInstrument()). El selector de archivo de más abajo (fuera del acordeón,
-         siempre visible mientras el cuadro está abierto) es OBLIGATORIO para escuchar sonido real:
-         no hay ninguna URL de SoundFont fija incluida -- ver el comentario de
-         loadGMSoundFontFile()/ensureGMLibLoaded() en el script para el porqué. Mientras no se cargue
-         ninguno, elegir un instrumento GM no deja las teclas mudas: PRISMA KEYS sigue sonando con el
-         piano de siempre hasta que haya un SoundFont activo (ver gmVoiceActive en playNote()). -->
-    <div class="control-box dropdown" id="dd-gm-instrument">
-        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-gm-instrument')" aria-haspopup="true" aria-expanded="false" aria-label="Instrumento GM: elegir un instrumento sampleado del set General MIDI y cargar el SoundFont">INSTRUMENTO GM</button>
-        <ul class="dropdown-menu" role="menu" aria-label="Cargar SoundFont e instrumentos General MIDI">
-            <li class="gm-sf-row" onclick="event.stopPropagation()">
-                <label for="gm-sf-file">CARGAR SOUNDFONT (.sf2 / .sf3)</label>
-                <input type="file" id="gm-sf-file" accept=".sf2,.sf3" onchange="loadGMSoundFontFile(event)">
-                <div id="gm-sf-status">SIN SOUNDFONT CARGADO -- SE SIGUE ESCUCHANDO EL PIANO DE SIEMPRE</div>
-            </li>
-            <li class="gm-list-wrapper">
-                <ul class="gm-family-list" id="dd-gm-list" role="listbox" aria-label="Familias de instrumentos General MIDI">
-                    <!-- Generado en buildGMInstrumentMenu() (ver script), a partir de GM_INSTRUMENT_FAMILIES -->
-                </ul>
-            </li>
-        </ul>
-    </div>
-
-    <!-- "EFECTOS DE AUDIO" (#dd-fx): Ecualizador de 3 bandas, Coro y Delay/Eco -- los 3 procesan
-         TODO lo que suena por igual (osciladores clásicos y el motor GM de arriba, ver su cableado
-         real en togglePower()). A diferencia de cualquier otro cuadro del programa, estas categorías
-         no abren una lista de OPCIONES para elegir una sola -- llevan controles deslizantes
-         (<input type="range">, ver .fx-slider-row en <style>) porque son parámetros continuos, no
-         una elección entre unas pocas alternativas fijas. Cada control llama directo a su función
-         (setEQBand/setChorusMix/setDelayTime/setDelayMix, ver el script) al arrastrarlo; el cuadro
-         NO se cierra solo al tocar un control (a diferencia de chooseDropdownOption()), para poder
-         ajustar varios seguidos sin que la lista se cierre en el medio. Los tres arrancan en su
-         posición NEUTRA (0dB / 0% / 0%) -- el sonido no cambia ni un poco hasta que la persona misma
-         suba algo. -->
-    <div class="control-box dropdown" id="dd-fx">
-        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-fx')" aria-haspopup="true" aria-expanded="false" aria-label="Efectos de audio: ecualizador, coro y delay/eco">EFECTOS DE AUDIO</button>
-        <ul class="dropdown-menu" role="menu" aria-label="Categorías de efectos de audio">
-            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Ecualizador
-                <ul class="dropdown-menu dropdown-submenu" role="group" aria-label="Ecualizador de 3 bandas">
-                    <li class="fx-slider-row" onclick="event.stopPropagation()">
-                        <div class="fx-label"><span>Graves</span><span id="eq-low-val">+0 dB</span></div>
-                        <input type="range" min="-12" max="12" step="1" value="0" oninput="setEQBand('low', this.value)">
-                    </li>
-                    <li class="fx-slider-row" onclick="event.stopPropagation()">
-                        <div class="fx-label"><span>Medios</span><span id="eq-mid-val">+0 dB</span></div>
-                        <input type="range" min="-12" max="12" step="1" value="0" oninput="setEQBand('mid', this.value)">
-                    </li>
-                    <li class="fx-slider-row" onclick="event.stopPropagation()">
-                        <div class="fx-label"><span>Agudos</span><span id="eq-high-val">+0 dB</span></div>
-                        <input type="range" min="-12" max="12" step="1" value="0" oninput="setEQBand('high', this.value)">
-                    </li>
-                </ul>
-            </li>
-            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Coro (Chorus)
-                <ul class="dropdown-menu dropdown-submenu" role="group" aria-label="Coro / Chorus">
-                    <li class="fx-slider-row" onclick="event.stopPropagation()">
-                        <div class="fx-label"><span>Intensidad</span><span id="chorus-val">0%</span></div>
-                        <input type="range" min="0" max="100" step="1" value="0" oninput="setChorusMix(this.value)">
-                    </li>
-                </ul>
-            </li>
-            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Delay / Eco
-                <ul class="dropdown-menu dropdown-submenu" role="group" aria-label="Delay / Eco">
-                    <li class="fx-slider-row" onclick="event.stopPropagation()">
-                        <div class="fx-label"><span>Tiempo</span><span id="delay-time-val">300 ms</span></div>
-                        <input type="range" min="50" max="800" step="10" value="300" oninput="setDelayTime(this.value)">
-                    </li>
-                    <li class="fx-slider-row" onclick="event.stopPropagation()">
-                        <div class="fx-label"><span>Mezcla</span><span id="delay-mix-val">0%</span></div>
-                        <input type="range" min="0" max="100" step="1" value="0" oninput="setDelayMix(this.value)">
-                    </li>
-                </ul>
-            </li>
-        </ul>
-    </div>
-
-    <!-- "ESCALERA DE COLORES" (#dd-colorlock): acordeón de 2 categorías, mismo patrón que
-         "CARACTERÍSTICAS DEL SONIDO"/"APRENDIZAJE MUSICAL". "Modo de Bloqueo" es la elección
-         original: "Selección por Lienzo" silencia cualquier nota que no pertenezca a la escala
-         activa -- ni siquiera crea sonido, venga de un clic en el piano de pantalla, de un teclado
-         MIDI real o de Sibelius (ver el chequeo al principio de playNote(), el único lugar por el
-         que pasan los tres) -- y "Libre" es el comportamiento de siempre. "Variante de Menor" (a
-         pedido del usuario) solo importa con las dos condiciones a la vez (Menor Relativo elegido
-         en CARACTERÍSTICAS DEL SONIDO, y "Selección por Lienzo" activo acá mismo), y cada opción
-         maneja su nota extra distinto: "Menor Armónica" REEMPLAZA la 7ª menor -- deja de sonar y de
-         pintarse -- por la 7ª mayor/sensible; "Menor Melódica" en cambio es ADITIVA -- la 6ª y 7ª
-         menores de siempre siguen sonando y pintándose igual, y la 6ª/7ª mayores se SUMAN como
-         notas extra permitidas, sin sacar ninguna. Ver MINOR_VARIANT_REL_OVERRIDE/
-         isAllowedByColorScaleLock()/isColoredAsInScale() en el script para el detalle exacto. -->
-    <div class="control-box dropdown" id="dd-colorlock">
-        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-colorlock')" aria-haspopup="true" aria-expanded="false" aria-label="Escalera de colores: restringir el sonido a solo las teclas de la escala activa, y variante de menor para la selección por lienzo">ESCALERA DE COLORES</button>
-        <ul class="dropdown-menu" role="menu" aria-label="Categorías de escalera de colores">
-            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Modo de Bloqueo
-                <ul class="dropdown-menu dropdown-submenu" id="sub-colorlock" role="listbox" aria-label="Modo de bloqueo por escala">
-                    <li role="option" data-value="lienzo" onclick="chooseColorLockMode('lienzo', event)">Selección por Lienzo</li>
-                    <li role="option" data-value="libre" class="active" onclick="chooseColorLockMode('libre', event)">Libre</li>
-                </ul>
-            </li>
-            <li class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Variante de Menor
-                <ul class="dropdown-menu dropdown-submenu" id="sub-minorvariant" role="listbox" aria-label="Variante de la escala menor para Selección por Lienzo">
-                    <li role="option" data-value="natural" class="active" onclick="chooseMinorScaleVariant('natural', event)">Natural (Eólica)</li>
-                    <li role="option" data-value="harmonic" onclick="chooseMinorScaleVariant('harmonic', event)">Menor Armónica (7ª mayor en vez de menor)</li>
-                    <li role="option" data-value="melodic" onclick="chooseMinorScaleVariant('melodic', event)">Menor Melódica (+6ª y 7ª mayores)</li>
-                </ul>
-            </li>
-        </ul>
-    </div>
-
-    <!-- "REPERTORIO SONORO" (#dd-repertoire, ver script chooseRepertoireEra()/getEraAwareCandidateKeys()):
-         elige uno de los 10 momentos históricos descritos en armonia_musical_por_periodos.md. Cada
-         período AJUSTA las reglas del sistema de pivotes automáticos (qué tonalidades vecinas se
-         consideran candidatas, qué variante de menor se fuerza, qué acordes cuentan como pivote) --
-         Selección por Lienzo, Mayor/Menor, etc. siguen funcionando exactamente igual por debajo.
-         "Ninguno" es el comportamiento general de siempre (el que ya existía antes de este bloque).
-         Solo Barroco/Clasicismo/Romanticismo están implementados por ahora; el resto queda marcado
-         "(próximamente)" y no cambia nada al elegirse -- se van a ir completando por secciones. -->
-    <!-- "PIVOTES AUTOMÁTICOS" (#autoPivotModeBtn, ver script toggleAutoPivotMode()/isAutoPivotModeOn()):
-         a pedido EXPLÍCITO del usuario ("quiero simplificar el modo de reconocimiento de pivotes a
-         un solo paso, un solo botón que haga todo el cambio") -- antes, activar el reconocimiento de
-         pivotes en vivo (ver isPivotDetectionActive() en el script) exigía tocar DOS cuadros
-         separados y en el orden correcto ("ESCALERA DE COLORES" -> "Selección por Lienzo" Y "Color
-         de Lienzo" -> "Fondo del Lienzo" -> alguna "Tonalidad Fija"), con el riesgo extra de dejar
-         paintBgFixedTonic (la tonalidad del FONDO) apuntando a una tonalidad distinta de
-         currentTonicOffset (la tonalidad MUSICAL real) si se elegían por separado sin fijarse. Este
-         botón hace las dos cosas de una sola vez, sincronizadas contra la tonalidad YA elegida --
-         "Repertorio Sonoro" (siguiente cuadro) y "Variante de Menor" quedan tal cual estén, son
-         ajustes finos opcionales que no hace falta tocar para que el reconocimiento funcione. A
-         pedido EXPLÍCITO del usuario, apagarlo NO intenta recordar qué había antes -- siempre vuelve
-         a los valores por defecto de siempre (Modo de Bloqueo: Libre, Fondo del Lienzo: Automático). -->
-    <div class="control-box" id="dd-autopivot">
-        <button type="button" class="select-tonic dropdown-toggle" id="autoPivotModeBtn" onclick="toggleAutoPivotMode(event)" aria-pressed="false" aria-label="Pivotes automáticos: activa de una sola vez Selección por Lienzo y Fondo del Lienzo en Tonalidad Fija, sincronizados con la tonalidad activa">PIVOTES AUTOMÁTICOS</button>
-    </div>
-
-    <div class="control-box dropdown" id="dd-repertoire">
-        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-repertoire')" aria-haspopup="listbox" aria-expanded="false" aria-label="Repertorio sonoro: ajusta las reglas de los pivotes automáticos según el período histórico">REPERTORIO SONORO</button>
-        <ul class="dropdown-menu" role="listbox" aria-label="Período histórico">
-            <li role="option" data-value="ninguno" class="active" onclick="chooseRepertoireEra('ninguno', event)">Ninguno (comportamiento general)</li>
-            <li role="option" data-value="medieval" onclick="chooseRepertoireEra('medieval', event)">Medieval (próximamente)</li>
-            <li role="option" data-value="renacimiento" onclick="chooseRepertoireEra('renacimiento', event)">Renacimiento (próximamente)</li>
-            <li role="option" data-value="barroco" onclick="chooseRepertoireEra('barroco', event)">Barroco</li>
-            <li role="option" data-value="clasico" onclick="chooseRepertoireEra('clasico', event)">Clasicismo</li>
-            <li role="option" data-value="romantico" onclick="chooseRepertoireEra('romantico', event)">Romanticismo</li>
-            <li role="option" data-value="posromantico" onclick="chooseRepertoireEra('posromantico', event)">Posromanticismo (próximamente)</li>
-            <li role="option" data-value="impresionismo" onclick="chooseRepertoireEra('impresionismo', event)">Impresionismo (próximamente)</li>
-            <li role="option" data-value="modernismo" onclick="chooseRepertoireEra('modernismo', event)">Modernismo del s. XX (próximamente)</li>
-            <li role="option" data-value="jazz" onclick="chooseRepertoireEra('jazz', event)">Jazz (próximamente)</li>
-            <li role="option" data-value="popular" onclick="chooseRepertoireEra('popular', event)">Popular/Contemporáneo (próximamente)</li>
-        </ul>
-    </div>
 
 </div>
 
@@ -4454,6 +4522,8 @@
     // (más abajo) lo consulta para rotular cada tecla de la fila microtonal con su nombre funcional
     // (Hypate/Parhypate/etc.) en vez del número de paso de siempre.
     let mainLockedStepDegreeNames = null;
+    // mainLockedStepExactCents: Map<step, cents EXACTOS del grado> -- misma vida útil que mainLockedStepDegreeNames; solo para "Modos Griegos (Archytas)" (suenan con la razón exacta, ver playNote()).
+    let mainLockedStepExactCents = null;
 
     let currentTonicOffset = 0;
     let currentScaleMode = "major";
@@ -5574,7 +5644,7 @@
     // Colores) se quitó al eliminarse ese modo por completo -- Acuarela(7)/Burbujas(8) siguen
     // soportando MODO REPRODUCCIÓN igual que siempre, sin importar que ahora se elijan desde
     // "Performance" (#dd-visualmode) en vez de "Mi Lienzo" (#dd-paint).
-    const PLAYBACK_SUPPORTED_MODES = [1, 4, 7, 8];
+    const PLAYBACK_SUPPORTED_MODES = [1, 4]; // 7/8 (Acuarela/Burbujas) eliminados de PERFORMANCE
 
     // scanX es, igual que colorLinesScanX (ver ese comentario más abajo), una coordenada LÓGICA que
     // crece sin límite -- a pedido del usuario, ESCRITURA MUSICAL adoptó la misma "banda infinita"
@@ -9579,7 +9649,7 @@
         }
         const scale = DIESIS_EXOTIC_SCALES[value];
         if (!scale) return;
-        showNotification(`ESCALA MUSICAL: "${scale.label.toUpperCase()}" APLICADA (${soundcharExoticScaleLockedPcs.size} DE 12 NOTAS) — EL RESTO QUEDA BLOQUEADO`);
+        showNotification(`ESCALA MUSICAL: "${scale.label.toUpperCase()}" APLICADA (${soundcharExoticScaleLockedPcs.size} DE 12 NOTAS) — EL RESTO QUEDA BLOQUEADO${scale.cents ? ' — SUENA CON LAS RAZONES EXACTAS DE ARQUITAS' : ''}`);
     }
 
     // "ESCALAS MODALES" (#sub-modalscales, sub-categoría anidada DENTRO de "Escala Musical") -- a
@@ -10483,6 +10553,11 @@
             rebuildMainDiesisSteps(); // tónica/diesis pueden haber cambiado desde la última vez (p.ej. MODO REPRODUCCIÓN restaura un tonalitySnapshot un instante antes de este playNote(), ver triggerPlaybackNote())
             const stepObj = mainDiesisSteps[microtonalStep] || mainDiesisSteps[0];
             fPit = stepObj.freq * Math.pow(2, microtonalOctaveShift);
+            // "Modos Griegos (Archytas)" fijado en la fila microtonal: el paso suena con la razón EXACTA de
+            // su grado (tónica del paso 0 × 2^(cents/1200)), no con la frecuencia del paso de diesis más cercano.
+            if (mainScaleLocked && mainLockedStepExactCents && mainLockedStepExactCents.has(microtonalStep) && mainDiesisSteps[0]) {
+                fPit = mainDiesisSteps[0].freq * Math.pow(2, mainLockedStepExactCents.get(microtonalStep) / 1200) * Math.pow(2, microtonalOctaveShift);
+            }
             colorObj = getMainDiesisStepColor(microtonalStep);
             midiForRegister = Math.round(69 + 12 * Math.log2(fPit / 440));
         } else {
@@ -10499,6 +10574,9 @@
             if (document.body.dataset.section === 'pintar' && !paintNoteHookSuppressed) setBrushColorFromPitchClass(pitchClass);
             const octaveOffset = Math.floor((midi - 60) / 12);
             fixedCents = getFixedKeyboardCents()[pitchClass];
+            // "Modos Griegos (Archytas)" de Escala Musical: afinación EXACTA del grado (ver getGreekExactFixedCents()).
+            const greekExactCents = getGreekExactFixedCents(pitchClass);
+            if (greekExactCents !== null) fixedCents = greekExactCents;
             fPit = mainReferenceDoHz * Math.pow(2, fixedCents / 1200) * Math.pow(2, octaveOffset);
             colorObj = getDynamicColor(midi);
         }
@@ -13956,6 +14034,8 @@
     function setNotation(value) {
         useFlatNotation = (value === 'flat');
         markActiveDropdownOption('dd-notation', value);
+        const nb = document.getElementById('compactNotationBtn');
+        if (nb) { nb.textContent = useFlatNotation ? 'b' : '#'; nb.setAttribute('aria-pressed', String(useFlatNotation)); }
         updateTonicPaletteLabels();
         refreshCircleScreenLabels();
         // Caso real reportado por el usuario: con "Nombre de notas" (MODO APRENDIZAJE) activo --
@@ -13997,7 +14077,9 @@
         // corregido a "% 10". Subió a "% 11" (índices 0-10) al agregarse "MODE: EQUALIZER" (índice 10,
         // al final de la lista, sin renumerar nada), a pedido del usuario.
         // Subió a "% 12" (índices 0-11) al agregarse "MODE: ESFERA DE COLOR" (índice 11), a pedido del usuario.
-        const nextMode = ((index % 12) + 12) % 12;
+        let nextMode = ((index % 12) + 12) % 12;
+        // ACUARELA (7) y BURBUJAS (8) fueron eliminados de PERFORMANCE: cualquier intento de llegar ahí cae en RADIAL RINGS.
+        if (nextMode === 7 || nextMode === 8) nextMode = 0;
         // MODO REPRODUCCIÓN (ver playbackState/buildPlaybackQueue()) solo tiene sentido mientras se
         // sigue viendo el mismo modo que se estaba reproduciendo -- cambiar de modo a mitad de la
         // reproducción la corta, para no dejar sonando de fondo algo que ya no corresponde a lo que
@@ -14098,7 +14180,7 @@
     // PINTAR_VISUAL_CYCLE queda vacío a propósito. Con el ciclo vacío, "V" simplemente no hace nada
     // en esta sección (ver el chequeo de arreglo vacío más abajo) en vez de intentar
     // setVisualMode(undefined) -- que rompería con un NaN.
-    const COLORES_VISUAL_CYCLE = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // 7/8 mudados desde "Mi Lienzo"; 9 = MODE: ONDAS SENOIDALES, 10 = MODE: EQUALIZER, ambos agregados a pedido del usuario
+    const COLORES_VISUAL_CYCLE = [0, 2, 3, 4, 5, 6, 9, 10, 11]; // 7/8 mudados desde "Mi Lienzo"; 9 = MODE: ONDAS SENOIDALES, 10 = MODE: EQUALIZER, ambos agregados a pedido del usuario
     const APRENDIZAJE_VISUAL_CYCLE = [1];
     const PINTAR_VISUAL_CYCLE = []; // vacío: Acuarela/Burbujas se mudaron, Fuego de Colores se eliminó (ver comentario de arriba)
     function toggleVisualMode() {
@@ -14127,7 +14209,9 @@
             setVisualMode(next !== undefined ? next : COLORES_VISUAL_CYCLE[0]);
             return;
         }
-        setVisualMode(visualMode + 1);
+        let nextVm = visualMode + 1;
+        if (nextVm === 7 || nextVm === 8) nextVm = 9; // saltea los modos eliminados
+        setVisualMode(nextVm);
     }
 
     function chooseVisualMode(value) {
@@ -14347,6 +14431,25 @@
     // genuinamente distintos en cents, pero más cerca entre sí que un semitono de 12-EDO (el "pyknon"
     // del enarmónico, ver el comentario grande de greekGenusToExoticScaleEntry()), redondean a la
     // MISMA tecla física -- esto es real, no un error de este cálculo.
+    // getGreekExactFixedCents(pitchClass): "MODOS GRIEGOS (ARCHYTAS)" en Escala Musical ahora SUENA con las
+    // razones EXACTAS de Arquitas (a pedido EXPLÍCITO del usuario), no solo bloquea teclas. Devuelve los
+    // cents (desde Do, cerca de pitchClass*100 para que 2^octaveOffset siga valiendo) que hacen sonar esa
+    // tecla a: frecuencia de la TÓNICA vigente (con la afinación fija elegida) × razón exacta del grado
+    // que le toca a esa tecla (scale.cents[i]). null cuando no aplica (otro preset, tecla fuera del
+    // género, o fila microtonal activa -- esa usa mainLockedStepExactCents, ver playNote()).
+    function getGreekExactFixedCents(pitchClass) {
+        if (!soundcharExoticScaleKey || GREEK_GENUS_EXOTIC_KEYS.indexOf(soundcharExoticScaleKey) < 0) return null;
+        if (isMicrotonalRowActive()) return null;
+        const scale = DIESIS_EXOTIC_SCALES[soundcharExoticScaleKey];
+        if (!scale || !scale.cents) return null;
+        const tonicPc = ((currentTonicOffset % 12) + 12) % 12;
+        const rel = (((pitchClass - tonicPc) % 12) + 12) % 12;
+        const idx = scale.semitones.indexOf(rel);
+        if (idx < 0) return null;
+        const tonicCents = getFixedKeyboardCents()[tonicPc];
+        const target = tonicCents + scale.cents[idx];
+        return target - 1200 * Math.round((target - pitchClass * 100) / 1200);
+    }
     function greekGenusDegreeLabelForPc(key, midi) {
         const scale = DIESIS_EXOTIC_SCALES[key];
         if (!scale || !scale.degreeNames) return '';
@@ -15640,8 +15743,10 @@
     // DOS lienzos (el modo visual normal y el panel "Cuerdas Sonoras" del recuadro lateral,
     // eliminado por redundante); hoy solo MODE: CUERDAS SONORAS (render(), sobre #wave) la llama,
     // pero se deja parametrizada por si el motor vuelve a necesitar dibujarla en otro canvas.
-    function drawStringsVisual(ctx, canvasEl, ambR, ambG, ambB) {
-        ctx.fillStyle = `rgb(${mixChannel(3, ambR, 0.18)}, ${mixChannel(3, ambG, 0.18)}, ${mixChannel(5, ambB, 0.18)})`;
+    function drawStringsVisual(ctx, canvasEl, ambR, ambG, ambB, onLight) {
+        // onLight ("Fondo del Lienzo: Blanco"): fondo blanco de verdad y cuerdas con contorno oscuro,
+        // para que sigan viéndose (antes quedaba un gris oscuro de 18% que ignoraba el Blanco).
+        ctx.fillStyle = onLight ? '#ffffff' : `rgb(${mixChannel(3, ambR, 0.18)}, ${mixChannel(3, ambG, 0.18)}, ${mixChannel(5, ambB, 0.18)})`;
         ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
         if (!isPower) return;
@@ -15670,6 +15775,7 @@
                 const y = baselineY + ((waveModulation + harmonicModulation) * envelope);
                 if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
+            if (onLight) { ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(20,20,20,0.45)'; ctx.stroke(); ctx.lineWidth = 3; ctx.strokeStyle = v.color.css; }
             ctx.stroke();
         });
     }
@@ -17863,6 +17969,9 @@
             // modos. El trazo también es más fino (grosor base 1px, o 3px con la tecla
             // físicamente presionada, más la velocidad) que el de PLASMA WAVE estándar.
             wCtx.clearRect(0, 0, wCan.width, wCan.height);
+            // "Fondo del Lienzo: Blanco": el resplandor ambiental (45% de opacidad, difuminado) solo
+            // llegaba a un gris sucio; con Blanco se pinta blanco de verdad detrás de las ondas.
+            if (paintBgMode === 'white') { wCtx.fillStyle = '#ffffff'; wCtx.fillRect(0, 0, wCan.width, wCan.height); }
             if (isPower) {
                 Object.values(activeVoices).forEach(v => {
                     // MISMO bug/misma corrección que MODE: WAVEFORM BARS (índice 3, ver el comentario
@@ -17894,7 +18003,7 @@
             // "Círculo Cromático...". La misma función alimenta también el canvas propio de
             // #circleScreen (updateCircleScreen()), así que la técnica de dibujo vive en un solo
             // lugar en vez de estar duplicada entre el modo visual y la pantalla completa.
-            drawStringsVisual(wCtx, wCan, ambR, ambG, ambB);
+            drawStringsVisual(wCtx, wCan, ambR, ambG, ambB, paintBgMode === 'white');
         } else if (visualMode === 7) {
             // MODE: ACUARELA -- a diferencia de todos los demás modos (que dibujan directo sobre
             // wCtx cada frame, con fundido o clearRect), acá el "lienzo real" es watercolorCanvas,
@@ -18007,7 +18116,7 @@
                 // Reposo: igual que el Sintetizador Dual en STANDBY -- fondo casi negro y una
                 // línea verde plana con resplandor tenue (contorno oscuro en vez de resplandor
                 // sobre "Fondo del Lienzo: Blanco", mismo criterio que el resto de los modos).
-                wCtx.fillStyle = onLightBg9 ? '#ffffff' : '#030304';
+                wCtx.fillStyle = onLightBg9 ? '#ffffff' : ((paintBgMode === 'fixed' || paintBgMode === 'hexmix') ? `rgb(${Math.round(ambR * 0.18)}, ${Math.round(ambG * 0.18)}, ${Math.round(ambB * 0.18)})` : '#030304');
                 wCtx.fillRect(0, 0, wCan.width, wCan.height);
                 wCtx.beginPath();
                 wCtx.strokeStyle = onLightBg9 ? 'rgba(20,20,20,0.5)' : '#0f0';
@@ -18030,7 +18139,8 @@
                 // original con this.mixedRgb, pero acá con calculateBlend() -- el color de la raíz
                 // del acorde reconocido, la misma fuente que ya usa MODE: OSCILLOSCOPE.
                 const blend9 = calculateBlend().rgb;
-                wCtx.fillStyle = onLightBg9 ? '#ffffff' : `rgb(${Math.round(blend9.r * 0.18)}, ${Math.round(blend9.g * 0.18)}, ${Math.round(blend9.b * 0.18)})`;
+                // ambR/ambG/ambB ya es el color resuelto de "Fondo del Lienzo" (auto = el de blend9, o negro/mezcla/tonalidad fija).
+                wCtx.fillStyle = onLightBg9 ? '#ffffff' : `rgb(${Math.round(ambR * 0.18)}, ${Math.round(ambG * 0.18)}, ${Math.round(ambB * 0.18)})`;
                 wCtx.fillRect(0, 0, wCan.width, wCan.height);
 
                 // Sin globalCompositeOperation 'lighter' acá -- el original dibuja cada hebra con
@@ -18092,9 +18202,13 @@
             const eqOnLight = paintBgMode === 'white';
             // "Fondo del Lienzo: Blanco" -- mismo criterio que el resto de los modos: se invierte la
             // paleta del fondo (claro, banda más oscura) pero los bloques conservan SUS colores.
-            const eqBg = eqOnLight ? '#f2f2ef' : '#1d1d1b';
-            const eqBand = eqOnLight ? '#8f8f8f' : '#9c9c9c';
-            const eqBgEnd = eqOnLight ? '#dcdcd8' : '#242422';
+            // Automático (color del acorde en vivo), Mezcla Hexadecimal y Tonalidad fija tiñen el fondo con
+            // el color resuelto (ambR/G/B); Blanco y Negro conservan sus fondos neutros.
+            const eqTint = !eqOnLight && paintBgMode !== 'black'; // Automático (sigue el acorde), Mezcla Hexadecimal y Tonalidad fija
+            const eqMix = k => `rgb(${Math.round(ambR * k)}, ${Math.round(ambG * k)}, ${Math.round(ambB * k)})`;
+            const eqBg = eqOnLight ? '#f2f2ef' : (eqTint ? eqMix(0.2) : '#1d1d1b');
+            const eqBand = eqOnLight ? '#8f8f8f' : (eqTint ? eqMix(0.55) : '#9c9c9c');
+            const eqBgEnd = eqOnLight ? '#dcdcd8' : (eqTint ? eqMix(0.26) : '#242422');
             const eqGrad = wCtx.createLinearGradient(0, 0, 0, eqH);
             eqGrad.addColorStop(0, eqBg);
             eqGrad.addColorStop(0.195, eqBg);
@@ -18180,7 +18294,8 @@
             // Fondo OPACO cada cuadro (como EQUALIZER): casi negro; con "Fondo del Lienzo: Blanco"
             // queda blanco, igual que la imagen de referencia.
             const sphOnLight = paintBgMode === 'white';
-            const sphBg = sphOnLight ? { r: 255, g: 255, b: 255 } : { r: 12, g: 12, b: 15 };
+            const sphTint = !sphOnLight && paintBgMode !== 'black'; // Automático (sigue el acorde), Mezcla Hexadecimal y Tonalidad fija
+            const sphBg = sphOnLight ? { r: 255, g: 255, b: 255 } : (sphTint ? { r: ambR * 0.2, g: ambG * 0.2, b: ambB * 0.2 } : { r: 12, g: 12, b: 15 });
             wCtx.fillStyle = sphCss(sphBg);
             wCtx.fillRect(0, 0, wCan.width, wCan.height);
 
@@ -18652,42 +18767,19 @@
     }
 
 
-    // ===================== VISTA COMPACTA (tableta / pantallas chicas) =====================
-    // Ver el bloque CSS "VISTA COMPACTA" en <style>. viewModePref: 'auto' (por defecto) decide solo
-    // según el dispositivo -- puntero táctil principal (tabletas/celulares) o ventana de 1100px de
-    // ancho o menos; 'compact' y 'full' fuerzan una u otra. La preferencia se recuerda en
-    // localStorage (envuelto en try/catch: puede no estar disponible).
-    let viewModePref = 'auto';
-    let isCompactView = false;
-    try {
-        const saved = localStorage.getItem('prismakeys_viewmode');
-        if (saved === 'auto' || saved === 'compact' || saved === 'full') viewModePref = saved;
-    } catch (e) {}
-
-    function shouldBeCompact() {
-        if (viewModePref === 'compact') return true;
-        if (viewModePref === 'full') return false;
-        let coarse = false;
-        try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
-        return coarse || window.innerWidth <= 1100;
-    }
+    // ===================== VISTA COMPACTA (interfaz única de PrismaKeys) =====================
+    // Ver el bloque CSS "VISTA COMPACTA" en <style>. A pedido del usuario es ahora la ÚNICA interfaz:
+    // se eliminaron la "vista completa" (cabecera grande + paneles laterales fijos) y el botón de
+    // inicio que alternaba entre vistas. <body class="compact"> lo fija desde el HTML.
+    const isCompactView = true;
 
     // Altura REAL de la franja superior que le resta espacio al lienzo: la barra compacta de 44px
     // (el cajón de ajustes flota por encima, no empuja nada) o la cabecera completa de siempre.
     function getTopBarHeight() {
-        if (isCompactView) {
-            const bar = document.getElementById('compactBar');
-            const h = bar ? bar.offsetHeight : 44;
-            document.documentElement.style.setProperty('--compact-bar-h', `${h}px`);
-            return h;
-        }
-        return document.querySelector('.header-controls').offsetHeight;
-    }
-
-    function updateViewModeLabels() {
-        const label = viewModePref === 'auto' ? 'VISTA: AUTOMÁTICA'
-            : (viewModePref === 'compact' ? 'VISTA: COMPACTA' : 'VISTA: COMPLETA');
-        document.querySelectorAll('.js-viewmode-btn').forEach(b => { b.textContent = label; });
+        const bar = document.getElementById('compactBar');
+        const h = bar ? bar.offsetHeight : 44;
+        document.documentElement.style.setProperty('--compact-bar-h', `${h}px`);
+        return h;
     }
 
     // Pantalla completa del navegador (donde exista: Chrome/Brave en Android y tabletas; el iPhone no la
@@ -18703,40 +18795,134 @@
         } catch (e) {}
     }
 
-    // Aplica (o quita) body.compact según la preferencia y el tamaño actual; si cambió, recalcula
-    // el lienzo. Se llama al arrancar, al cambiar el tamaño/orientación y al cambiar la preferencia.
+    // Se llama al arrancar y al cambiar el tamaño/orientación. Al cruzar el umbral de ancho (girar la
+    // tableta, etc.) se limpia el estado de INFO: los modos "dos paneles" y "uno por vez" no se pueden
+    // mezclar. Recalcula el lienzo si hace falta.
     function applyViewMode() {
-        const want = shouldBeCompact();
-        updateViewModeLabels();
-        // Al cruzar el umbral de ancho (girar la tableta, etc.) se limpia el estado de INFO: los modos
-        // "dos paneles" y "uno por vez" no se pueden mezclar.
+        document.body.classList.add('compact');
         const narrowNow = window.innerWidth <= COMPACT_NARROW_PX;
         if (narrowNow !== lastCompactNarrow) {
             lastCompactNarrow = narrowNow;
             document.body.classList.remove('compact-panels', 'panels-left', 'panels-right');
             updateCompactPanelsButton();
+            resizeCanvas();
+            if (dualSynthOpen) positionDualSynthScreen();
         }
-        if (want === isCompactView && document.body.classList.contains('compact') === want) return;
-        isCompactView = want;
-        document.body.classList.toggle('compact', want);
-        if (!want) {
-            document.body.classList.remove('compact-menu-open', 'compact-panels', 'panels-left', 'panels-right', 'compact-no-piano');
-            updateCompactPanelsButton();
-        }
-        resizeCanvas();
-        if (dualSynthOpen) positionDualSynthScreen();
     }
 
-    function cycleViewMode() {
-        viewModePref = viewModePref === 'auto' ? 'compact' : (viewModePref === 'compact' ? 'full' : 'auto');
-        try { localStorage.setItem('prismakeys_viewmode', viewModePref); } catch (e) {}
-        applyViewMode();
-        showNotification(viewModePref === 'auto' ? 'VISTA AUTOMÁTICA (SEGÚN EL DISPOSITIVO)'
-            : (viewModePref === 'compact' ? 'VISTA COMPACTA' : 'VISTA COMPLETA'));
+    // ---- Lista de PERFORMANCE de la barra ----
+    // Se arma al abrir, copiando las filas de #dd-visualmode (así sigue cualquier cambio futuro de esa lista) y
+    // marcando la activa; elegir una fila llama a chooseVisualMode() (la misma función de siempre).
+    function closeCompactPerfMenu() {
+        const menu = document.getElementById('compactPerfMenu');
+        const btn = document.getElementById('compactPerfBtn');
+        if (menu) menu.classList.remove('open');
+        if (btn) { btn.classList.remove('on'); btn.setAttribute('aria-expanded', 'false'); }
+    }
+    function closeCompactActMenu() {
+        const menu = document.getElementById('compactActMenu');
+        const btn = document.getElementById('compactActBtn');
+        if (menu) menu.classList.remove('open');
+        if (btn) { btn.classList.remove('on'); btn.setAttribute('aria-expanded', 'false'); }
+        closeAllDropdowns();
+    }
+
+    // ACTUACIÓN: abre/cierra el panel con Escala Musical, Escalera de colores, Pivotes automáticos y Repertorio sonoro.
+    function toggleCompactActMenu(e) {
+        if (e) e.stopPropagation();
+        const menu = document.getElementById('compactActMenu');
+        const btn = document.getElementById('compactActBtn');
+        if (!menu || !btn) return;
+        if (menu.classList.contains('open')) { closeCompactActMenu(); return; }
+        closeCompactPerfMenu();
+        closeCompactSoundsMenu();
+        toggleCompactMenu(false);
+        menu.classList.add('open');
+        btn.classList.add('on');
+        btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeCompactSoundsMenu() {
+        const menu = document.getElementById('compactSoundsMenu');
+        const btn = document.getElementById('compactSoundsBtn');
+        if (menu) menu.classList.remove('open');
+        if (btn) { btn.classList.remove('on'); btn.setAttribute('aria-expanded', 'false'); }
+        closeAllDropdowns();
+    }
+
+    // SONIDOS: abre/cierra el panel con Sonido, MIDI, Instrumento GM y Efectos de audio (ver su HTML en #compactBar).
+    function toggleCompactSoundsMenu(e) {
+        if (e) e.stopPropagation();
+        const menu = document.getElementById('compactSoundsMenu');
+        const btn = document.getElementById('compactSoundsBtn');
+        if (!menu || !btn) return;
+        if (menu.classList.contains('open')) { closeCompactSoundsMenu(); return; }
+        closeCompactPerfMenu();
+        closeCompactActMenu();
+        toggleCompactMenu(false);
+        menu.classList.add('open');
+        btn.classList.add('on');
+        btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function toggleCompactPerfMenu(e) {
+        if (e) e.stopPropagation();
+        const menu = document.getElementById('compactPerfMenu');
+        const btn = document.getElementById('compactPerfBtn');
+        if (!menu || !btn) return;
+        if (menu.classList.contains('open')) { closeCompactPerfMenu(); return; }
+        toggleCompactMenu(false); // cierra el cajón de AJUSTES si estaba abierto
+        closeCompactSoundsMenu();
+        closeCompactActMenu();
+        menu.innerHTML = '';
+        document.querySelectorAll('#dd-visualmode li[data-value]').forEach(src => {
+            const li = document.createElement('li');
+            li.setAttribute('role', 'option');
+            li.dataset.value = src.dataset.value;
+            li.textContent = src.textContent.trim().replace(/^MODE:\s*/i, '');
+            if (String(visualMode) === src.dataset.value) li.classList.add('active');
+            li.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                closeCompactPerfMenu();
+                chooseVisualMode(src.dataset.value);
+            });
+            menu.appendChild(li);
+        });
+        // "FONDO DEL LIENZO" (antes en el botón "Color de lienzo"): acordeón al final de la lista.
+        // La fuente de verdad sigue siendo #sub-paintbg (choosePaintOption() marca ahí la activa).
+        const bgSrc = Array.from(document.querySelectorAll('#sub-paintbg > li[data-value]'));
+        if (bgSrc.length) {
+            menu.classList.remove('bg-open');
+            const cur = bgSrc.find(x => x.classList.contains('active'));
+            const head = document.createElement('li');
+            head.className = 'cb-perf-head';
+            head.setAttribute('role', 'button');
+            head.textContent = 'FONDO DEL LIENZO' + (cur ? ': ' + cur.textContent.trim().replace(/^Tonalidad fija:\s*/i, '') : '') + ' ▾';
+            head.addEventListener('click', (ev) => { ev.stopPropagation(); menu.classList.toggle('bg-open'); });
+            menu.appendChild(head);
+            bgSrc.forEach(src => {
+                const li = document.createElement('li');
+                li.className = 'cb-bg-item';
+                li.setAttribute('role', 'option');
+                li.dataset.value = src.dataset.value;
+                li.textContent = src.textContent.trim();
+                if (src.classList.contains('active')) li.classList.add('active');
+                li.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    closeCompactPerfMenu();
+                    choosePaintOption('fondo', src.dataset.value, ev);
+                });
+                menu.appendChild(li);
+            });
+        }
+        menu.classList.add('open');
+        btn.classList.add('on');
+        btn.setAttribute('aria-expanded', 'true');
     }
 
     function toggleCompactMenu(force) {
         const open = (typeof force === 'boolean') ? force : !document.body.classList.contains('compact-menu-open');
+        if (open) { closeCompactPerfMenu(); closeCompactSoundsMenu(); closeCompactActMenu(); }
         document.body.classList.toggle('compact-menu-open', open);
         const btn = document.getElementById('compactMenuBtn');
         if (btn) { btn.classList.toggle('on', open); btn.setAttribute('aria-expanded', String(open)); }
@@ -18792,7 +18978,8 @@
     const CK_ZOOMS = [{ whites: 14, label: '2 OCT' }, { whites: 28, label: '4 OCT' }, { whites: 52, label: '88' }];
     const CK_MT_ZOOMS = [{ vis: 12, label: '12' }, { vis: 24, label: '24' }, { vis: 0, label: 'TODO' }];
     const CK_C3_WHITE_INDEX = 16; // A0 B0 + 14 blancas (C1..B2) = 16 -> la 17ª blanca es C3
-    let ckZoomIdx = 0;
+    // En pantallas muy anchas (monitor de escritorio) arranca en 4 octavas: 2 octavas serían teclas enormes.
+    let ckZoomIdx = (window.innerWidth >= 1500) ? 1 : 0;
     let ckMtZoomIdx = 0;
     let ckPlaced = false;
     let ckLastSig = '';
@@ -18958,6 +19145,15 @@
         if (wrap) wrap.addEventListener('pointerdown', () => {
             if (document.body.classList.contains('compact-menu-open')) toggleCompactMenu(false);
         });
+        // tocar fuera de la lista de PERFORMANCE la cierra
+        document.addEventListener('pointerdown', (e) => {
+            const menu = document.getElementById('compactPerfMenu');
+            if (menu && menu.classList.contains('open') && !(e.target.closest && e.target.closest('.cb-perf-wrap'))) closeCompactPerfMenu();
+            const sm = document.getElementById('compactSoundsMenu');
+            if (sm && sm.classList.contains('open') && !(e.target.closest && e.target.closest('.cb-sounds-wrap'))) closeCompactSoundsMenu();
+            const am = document.getElementById('compactActMenu');
+            if (am && am.classList.contains('open') && !(e.target.closest && e.target.closest('.cb-act-wrap'))) closeCompactActMenu();
+        }, true);
         const real = document.getElementById('prismaRecordBtn');
         const mirror = document.getElementById('compactRecBtn');
         if (real && mirror && window.MutationObserver) {
@@ -18966,10 +19162,6 @@
                 mirror.textContent = real.textContent;
             }).observe(real, { attributes: true, childList: true, characterData: true, subtree: true });
         }
-        try {
-            const mq = window.matchMedia('(pointer: coarse)');
-            if (mq.addEventListener) mq.addEventListener('change', applyViewMode);
-        } catch (e) {}
     })();
 
     window.onresize = () => {
@@ -19921,6 +20113,7 @@
             mainScaleLocked = false;
             mainLockedSteps.clear();
             mainLockedStepDegreeNames = null; // ver el comentario junto a esa variable, más arriba
+            mainLockedStepExactCents = null;
             updateMainScaleLockButtonUI();
         }
         // Pool de canales GM por paso (MICROTONALIDAD CON GM, ver mainGmChannelByStep/
@@ -20575,6 +20768,7 @@
             mainScaleLocked = false;
             mainLockedSteps.clear();
             mainLockedStepDegreeNames = null; // ver el comentario junto a esa variable, más arriba
+            mainLockedStepExactCents = null;
             updateMainScaleLockButtonUI();
             buildMainMicrotonalKeyboardDOM();
             updateMainMicrotonalActiveHighlight();
@@ -20589,6 +20783,7 @@
         }
         mainLockedSteps = new Set(mainChordSteps);
         mainLockedStepDegreeNames = null; // fijado manual (tabla "Acordes"/toque directo), no trae nombres de grado
+        mainLockedStepExactCents = null;
         mainScaleLocked = true;
         updateMainScaleLockButtonUI();
         buildMainMicrotonalKeyboardDOM();
@@ -20666,9 +20861,11 @@
         // cayeran igual en el MISMO step de la diesis vigente -- mismo criterio de colisión que ya
         // se documenta para el teclado fijo de 12 teclas, solo que acá casi nunca ocurre.
         const stepDegreeNames = scale.degreeNames ? new Map() : null;
+        const stepExactCents = scale.degreeNames && scale.cents ? new Map() : null;
         centsToLock.forEach((c, i) => {
             const step = findNearestMainDiesisStepForCents(c);
             stepSet.add(step);
+            if (stepExactCents && !stepExactCents.has(step)) stepExactCents.set(step, c);
             if (stepDegreeNames) {
                 const name = scale.degreeNames[i];
                 stepDegreeNames.set(step, stepDegreeNames.has(step) ? `${stepDegreeNames.get(step)}/${name}` : name);
@@ -20678,13 +20875,14 @@
         mainChordSteps = new Set(steps);
         mainLockedSteps = new Set(steps);
         mainLockedStepDegreeNames = stepDegreeNames;
+        mainLockedStepExactCents = stepExactCents;
         mainScaleLocked = true;
         updateMainScaleLockButtonUI();
         buildMainMicrotonalKeyboardDOM();
         updateMainMicrotonalActiveHighlight();
         rebuildMainMidiWhiteKeyMapping();
         updateMainChordPanel();
-        showNotification(`PRISMAKEYS: "${scale.label.toUpperCase()}" APLICADA (${steps.length} DE ${mainDiesisClosingStep} PASOS) -- EL RESTO QUEDA BLOQUEADO -- EL CONTROLADOR MIDI RESPONDE EN TECLAS BLANCAS, EN SECUENCIA, SI ESE MODO ESTÁ ACTIVO`);
+        showNotification(`PRISMAKEYS: "${scale.label.toUpperCase()}" APLICADA (${steps.length} DE ${mainDiesisClosingStep} PASOS) -- EL RESTO QUEDA BLOQUEADO -- EL CONTROLADOR MIDI RESPONDE EN TECLAS BLANCAS, EN SECUENCIA, SI ESE MODO ESTÁ ACTIVO${stepExactCents ? ' -- SUENA CON LAS RAZONES EXACTAS DE ARQUITAS' : ''}`);
     }
 
     // toggleMainChordId(id)/releaseMainChordId(id): MISMO patrón exacto que
@@ -20950,9 +21148,22 @@
     function greekGenusToExoticScaleEntry(genus) {
         const degrees = buildGreekTetrachordOctaveRatios(genus);
         const centsArr = degrees.map(d => 1200 * Math.log2(d.ratioVal));
+        // ASIGNACIÓN ÚNICA de tecla por grado (nuevo, junto con el sonido con razones EXACTAS): antes cada grado
+        // se redondeaba al semitono más cercano y, en el enarmónico, dos pares de grados caían en la MISMA
+        // tecla (5 teclas para 7 grados). Ahora, si el semitono más cercano ya lo ocupa un grado más grave,
+        // el grado toma la tecla libre siguiente (los cents ya vienen en orden ascendente) -- así los 7
+        // grados tienen su propia tecla y cada una suena con la razón exacta de SU grado (ver
+        // getGreekExactFixedCents()). Diatónico y cromático no tienen colisiones: sus teclas no cambian.
+        const usedSemis = new Set();
+        const uniqueSemitones = centsArr.map(c => {
+            let st = Math.round(c / 100);
+            while (usedSemis.has(st) && st < 11) st++;
+            usedSemis.add(st);
+            return st;
+        });
         return {
             label: `Modos Griegos (Archytas): ${GREEK_GENUS_LABELS[genus]}`,
-            semitones: centsArr.map(c => Math.round(c / 100)),
+            semitones: uniqueSemitones,
             cents: centsArr,
             degreeNames: GREEK_DEGREE_NAMES
         };
