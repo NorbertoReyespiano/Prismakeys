@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>PRISMA KEYS // STEINWAY & SONS GRAND MODEL ENGINE v4.9 (Concert D-274)</title>
     <style>
         :root { --line: #00ff41; --bg: #000; --panic: #ff3333; --accent: #00d2ff; --minor-accent: #8a2be2; --undo: #ffcc00; }
@@ -2518,6 +2520,51 @@
         body.compact #panelIntegrated { display: none; }
         body.compact .piano-container, body.compact .piano-container-microtonal { height: 100px; }
         body.compact.compact-no-piano .console-bottom { display: none; }
+
+        /* ---------- ETAPA 2: vertical y celular ----------
+           - La barra compacta se acomoda en 2 filas cuando no entra (alto automático, no fijo).
+           - Desde 900px de ancho para abajo: el cajón de ajustes se desplaza si hace falta y sus
+             desplegables se abren EN LÍNEA (no flotando, que se saldrían de la pantalla); INFO muestra
+             un panel a la vez (izquierdo / derecho); la tonalidad baja de la barra al lienzo.
+           - 100dvh en vez de 100vh: en el celular la barra de direcciones del navegador no tapa el
+             piano. touch-action: manipulation evita el zoom por doble toque mientras se toca. */
+        body.compact { touch-action: manipulation; overscroll-behavior: none; }
+        @supports (height: 100dvh) { body.compact { height: 100dvh; } }
+        body.compact .compact-bar { flex: 0 0 auto; height: auto; min-height: 44px; flex-wrap: wrap; row-gap: 5px; padding: 5px 8px; overflow: visible; }
+        body.compact .compact-bar .cb-spacer { display: none; }
+        body.compact .compact-bar .cb-first-right { margin-left: auto; }
+        body.compact .header-controls { top: var(--compact-bar-h, 44px); }
+        .btn-fullscreen-compact { display: none; }
+        body.compact .btn-fullscreen-compact {
+            display: block; min-height: 40px; padding: 0 14px; font-family: inherit; font-size: 12px; font-weight: bold;
+            letter-spacing: 1px; background: #000; border: 1px solid var(--accent); color: var(--accent); border-radius: 3px; cursor: pointer;
+        }
+        .home-extra-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        body.compact.panels-left:not([data-section="modos_griegos"]):not([data-section="circulo_diesis"]) #leftSidePanel,
+        body.compact.panels-right:not([data-section="modos_griegos"]):not([data-section="circulo_diesis"]) #rightSidePanel {
+            display: flex; position: absolute; top: 0; bottom: var(--compact-console-h, 112px); z-index: 30; flex: none;
+            width: min(92vw, 320px); background: rgba(0,0,0,0.92);
+        }
+        body.compact.panels-left #leftSidePanel { left: 0; border-right: 1px solid #222; }
+        body.compact.panels-right #rightSidePanel { right: 0; border-left: 1px solid #222; }
+        @media (max-width: 900px) {
+            body.compact .header-controls {
+                max-height: calc(100vh - var(--compact-bar-h, 44px));
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
+            }
+            @supports (height: 100dvh) {
+                body.compact .header-controls { max-height: calc(100dvh - var(--compact-bar-h, 44px)); }
+            }
+            body.compact .header-controls .dropdown.open { flex: 1 1 100%; max-width: 100%; }
+            body.compact .header-controls .dropdown.open > .dropdown-menu {
+                position: static; transform: none; width: 100%; min-width: 0; max-height: 45vh; margin-top: 6px;
+            }
+            body.compact #tonalityStatusBox { top: calc(var(--compact-bar-h, 44px) + 6px); right: 6px; }
+            body.compact .compact-bar button { padding: 0 8px; font-size: 10px; height: 32px; min-width: 36px; }
+        }
+        @media (max-height: 520px) {
+            body.compact .piano-container, body.compact .piano-container-microtonal { height: 64px; }
+        }
     </style>
 </head>
 <body>
@@ -2610,7 +2657,10 @@
     </div>
     <!-- VISTA: Automática (detecta tableta/pantalla chica) / Compacta / Completa -- ver
          applyViewMode() en el script. Recordada entre visitas. -->
-    <button type="button" class="home-viewmode-btn" id="homeViewModeBtn" onclick="cycleViewMode()">VISTA: AUTOMÁTICA</button>
+    <div class="home-extra-btns">
+        <button type="button" class="home-viewmode-btn js-viewmode-btn" id="homeViewModeBtn" onclick="cycleViewMode()">VISTA: AUTOMÁTICA</button>
+        <button type="button" class="home-viewmode-btn js-fs-btn" onclick="toggleFullscreen()">⛶ PANTALLA COMPLETA</button>
+    </div>
 </div>
 
 <div id="mainAppContainer" class="hidden">
@@ -2627,13 +2677,17 @@
     <button type="button" id="compactPanelsBtn" onclick="toggleCompactPanels()">INFO</button>
     <button type="button" id="compactPianoBtn" onclick="toggleCompactPiano()">PIANO</button>
     <span class="cb-spacer"></span>
-    <button type="button" onclick="clearScreenButton(event)">LIMPIAR</button>
+    <button type="button" class="cb-first-right" onclick="clearScreenButton(event)">LIMPIAR</button>
     <button type="button" class="cb-danger" onclick="panicReset()">RESETEO</button>
     <button type="button" class="cb-danger" id="compactRecBtn" onclick="togglePrismaRecording()">● GRABAR</button>
     <button type="button" id="compactExitBtn" onclick="exitCompactImmersive()">✕ SALIR</button>
 </div>
 
 <div class="header-controls">
+    <!-- Solo se ven en vista compacta (ver .btn-fullscreen-compact en <style>): pantalla completa del
+         navegador (gana el espacio de la barra de direcciones) y el selector de vista. -->
+    <button type="button" class="btn-fullscreen-compact js-fs-btn" onclick="toggleFullscreen()">⛶ PANTALLA COMPLETA</button>
+    <button type="button" class="btn-fullscreen-compact js-viewmode-btn" onclick="cycleViewMode()">VISTA: AUTOMÁTICA</button>
     <!-- "MENÚ PRINCIPAL" (goToHomeScreen(), ver el script y el comentario junto a .btn-home en
          <style>): primer botón de la cabecera para que sea fácil de encontrar volviendo desde
          cualquier parte del programa. -->
@@ -18559,7 +18613,9 @@
     function getTopBarHeight() {
         if (isCompactView) {
             const bar = document.getElementById('compactBar');
-            return bar ? bar.offsetHeight : 44;
+            const h = bar ? bar.offsetHeight : 44;
+            document.documentElement.style.setProperty('--compact-bar-h', `${h}px`);
+            return h;
         }
         return document.querySelector('.header-controls').offsetHeight;
     }
@@ -18567,8 +18623,20 @@
     function updateViewModeLabels() {
         const label = viewModePref === 'auto' ? 'VISTA: AUTOMÁTICA'
             : (viewModePref === 'compact' ? 'VISTA: COMPACTA' : 'VISTA: COMPLETA');
-        const btn = document.getElementById('homeViewModeBtn');
-        if (btn) btn.textContent = label;
+        document.querySelectorAll('.js-viewmode-btn').forEach(b => { b.textContent = label; });
+    }
+
+    // Pantalla completa del navegador (donde exista: Chrome/Brave en Android y tabletas; el iPhone no la
+    // ofrece y en ese caso el botón se esconde en initCompactView()).
+    function toggleFullscreen() {
+        const el = document.documentElement;
+        try {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+            } else {
+                (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+            }
+        } catch (e) {}
     }
 
     // Aplica (o quita) body.compact según la preferencia y el tamaño actual; si cambió, recalcula
@@ -18576,11 +18644,20 @@
     function applyViewMode() {
         const want = shouldBeCompact();
         updateViewModeLabels();
+        // Al cruzar el umbral de ancho (girar la tableta, etc.) se limpia el estado de INFO: los modos
+        // "dos paneles" y "uno por vez" no se pueden mezclar.
+        const narrowNow = window.innerWidth <= COMPACT_NARROW_PX;
+        if (narrowNow !== lastCompactNarrow) {
+            lastCompactNarrow = narrowNow;
+            document.body.classList.remove('compact-panels', 'panels-left', 'panels-right');
+            updateCompactPanelsButton();
+        }
         if (want === isCompactView && document.body.classList.contains('compact') === want) return;
         isCompactView = want;
         document.body.classList.toggle('compact', want);
         if (!want) {
-            document.body.classList.remove('compact-menu-open', 'compact-panels', 'compact-no-piano');
+            document.body.classList.remove('compact-menu-open', 'compact-panels', 'panels-left', 'panels-right', 'compact-no-piano');
+            updateCompactPanelsButton();
         }
         resizeCanvas();
         if (dualSynthOpen) positionDualSynthScreen();
@@ -18602,9 +18679,30 @@
         if (!open) closeAllDropdowns();
     }
 
+    // INFO: con ancho > 900px muestra los dos paneles laterales a la vez; en pantallas angostas muestra
+    // un panel por toque (izquierdo -> derecho -> ninguno) para no tapar todo el lienzo.
+    const COMPACT_NARROW_PX = 900;
+    let lastCompactNarrow = null;
+    function updateCompactPanelsButton() {
+        const b = document.body.classList;
+        const btn = document.getElementById('compactPanelsBtn');
+        if (!btn) return;
+        const on = b.contains('compact-panels') || b.contains('panels-left') || b.contains('panels-right');
+        btn.classList.toggle('on', on);
+        btn.textContent = b.contains('panels-left') ? 'INFO 1/2' : (b.contains('panels-right') ? 'INFO 2/2' : 'INFO');
+    }
     function toggleCompactPanels() {
-        const on = document.body.classList.toggle('compact-panels');
-        document.getElementById('compactPanelsBtn').classList.toggle('on', on);
+        const b = document.body.classList;
+        if (window.innerWidth <= COMPACT_NARROW_PX) {
+            b.remove('compact-panels');
+            if (b.contains('panels-left')) { b.remove('panels-left'); b.add('panels-right'); }
+            else if (b.contains('panels-right')) b.remove('panels-right');
+            else b.add('panels-left');
+        } else {
+            b.remove('panels-left', 'panels-right');
+            b.toggle('compact-panels');
+        }
+        updateCompactPanelsButton();
         resizeCanvas();
     }
 
@@ -18624,6 +18722,9 @@
     // El cajón de ajustes se cierra al tocar el lienzo; el botón GRABAR de la barra refleja el estado
     // del botón real (#prismaRecordBtn) sin tocar su lógica.
     (function initCompactView() {
+        if (!document.documentElement.requestFullscreen && !document.documentElement.webkitRequestFullscreen) {
+            document.querySelectorAll('.js-fs-btn').forEach(b => { b.style.display = 'none'; b.classList.remove('btn-fullscreen-compact'); });
+        }
         const wrap = document.getElementById('canvasWrapper');
         if (wrap) wrap.addEventListener('pointerdown', () => {
             if (document.body.classList.contains('compact-menu-open')) toggleCompactMenu(false);
