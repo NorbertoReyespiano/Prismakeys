@@ -2818,12 +2818,97 @@
         .metro-win button.mbtn { height: 40px; min-width: 44px; padding: 0 10px; font-family: inherit; font-size: 15px; font-weight: bold; background: #0a2a3d; color: #e8f3fa; border: 1px solid #9db4ff; border-radius: 6px; cursor: pointer; touch-action: manipulation; }
         .metro-win button.mbtn:active { background: #9db4ff; color: #000; }
         .metro-win input[type="range"] { width: 100%; accent-color: #9db4ff; height: 28px; touch-action: manipulation; }
+        .metro-vol { display: flex; align-items: center; gap: 8px; }
+        .metro-vol-btn { flex: 0 0 auto; width: 44px; padding: 0 !important; display: inline-flex; align-items: center; justify-content: center; }
+        .metro-vol-btn.on { background: #ff4a4a !important; border-color: #ff4a4a !important; color: #fff !important; }
+        .metro-vol input[type="range"] { flex: 1 1 auto; width: auto; }
+        .metro-vol-val { flex: 0 0 42px; text-align: right; font-size: 13px; color: #9fc3d8; }
+        .metro-layers button { position: relative; }
+        .metro-layers button.sel { outline: 3px solid #fff; outline-offset: 1px; }
+        .metro-layers button.has-snd::after { content: ""; position: absolute; top: 3px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.5); }
+        .metro-snd { display: none; flex-direction: column; gap: 8px; padding: 10px; border: 2px solid var(--lc, #9db4ff); border-radius: 8px; background: rgba(0,0,0,0.25); }
+        .metro-snd.open { display: flex; }
+        .metro-snd-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: bold; letter-spacing: 1px; color: var(--lc, #9db4ff); }
+        .metro-snd-x { width: 30px; height: 26px; font-size: 14px; background: transparent; color: #9db4ff; border: 1px solid #9db4ff; border-radius: 4px; cursor: pointer; }
+        .metro-snd select { width: 100%; height: 40px; font-family: inherit; font-size: 13px; background: #0a2a3d; color: #fff; border: 2px solid #9db4ff; border-radius: 6px; padding: 0 6px; }
+        .metro-kit { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 1px; color: #9fc3d8; }
+        .metro-kit select { flex: 1 1 auto; height: 36px; font-family: inherit; font-size: 13px; background: #0a2a3d; color: #fff; border: 2px solid #9db4ff; border-radius: 6px; padding: 0 6px; }
+        .metro-snd-note { font-size: 10.5px; line-height: 1.35; color: #9fc3d8; }
+        .metro-snd-file { display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px !important; cursor: pointer; }
+        .metro-snd-file input { display: none; }
         .metro-row { display: flex; gap: 8px; align-items: center; justify-content: center; }
         .metro-row .mbtn { flex: 1; }
         .metro-play { font-size: 16px !important; }
         .metro-play.on { background: #ff4a4a !important; border-color: #ff4a4a !important; color: #fff !important; }
         .metro-mode.on { background: #9db4ff !important; color: #000 !important; }
-</style>
+
+        /* === "PINTA CON SONIDOS" (formato nuevo, a pedido EXPLÍCITO del usuario, copiado del video de
+           referencia): hoja cuadriculada clara de esquinas redondeadas + línea de reproducción en bucle
+           + 4 filas de controles abajo. Reemplaza por completo el lienzo de trazo libre anterior
+           (#drawTabletCanvas) y la Paleta de Sonidos. Todo vive en #pcsRoot (HTML dentro de
+           #canvasWrapper) y en el 4º <script> (window.pcs). === */
+        #pcsRoot { display: none; }
+        body[data-section="pintar"] #pcsRoot {
+            display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; width: 100%;
+            position: relative; z-index: 3; background: #dcdad2; color: #1b1b1b; box-sizing: border-box;
+            user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        body[data-section="pintar"] #drawTabletCanvas { display: none; }
+        body[data-section="pintar"] .circle-colororder-panel { display: none; }
+        body[data-section="pintar"] #tonalityStatusBox { display: none !important; }
+        #pcsStage { flex: 1 1 auto; min-height: 0; padding: 10px 10px 6px; display: flex; }
+        #pcsPaper {
+            position: relative; flex: 1 1 auto; min-width: 0; border-radius: 20px; overflow: hidden;
+            background: #fbfaf4; box-shadow: 0 1px 0 #fff inset, 0 2px 10px rgba(0,0,0,0.25);
+            border: 1px solid #b9b6aa;
+        }
+        #pcsCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+        #pcsRoot.pcs-erase #pcsCanvas { cursor: cell; }
+        #pcsControls { flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px; padding: 4px 10px 10px; width: 100%; max-width: 600px; align-self: center; box-sizing: border-box; }
+        .pcs-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: nowrap; min-height: 42px; }
+        .pcs-row.pcs-spread { justify-content: space-between; }
+        .pcs-grow { flex: 1 1 auto; }
+        .pcs-btn {
+            flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; border: 2px solid #8d8a7f; background: #fff;
+            color: #222; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;
+            font: bold 16px/1 system-ui, sans-serif; touch-action: manipulation;
+        }
+        .pcs-btn svg { width: 22px; height: 22px; fill: currentColor; stroke: none; pointer-events: none; }
+        .pcs-btn.pcs-on { background: #111; border-color: #111; color: #fff; }
+        .pcs-btn:active { transform: scale(0.94); }
+        .pcs-tempo { display: inline-flex; align-items: center; gap: 4px; }
+        .pcs-tempo .pcs-btn { width: 36px; height: 36px; font-size: 20px; }
+        #pcsBpm { min-width: 38px; text-align: center; font: bold 17px/1 system-ui, sans-serif; }
+        .pcs-dot {
+            flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; padding: 0;
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+            color: #fff; font: bold 10px/1 system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.25) inset; touch-action: manipulation;
+        }
+        .pcs-dot.pcs-on { border-color: #111; box-shadow: 0 0 0 2px #fff inset, 0 0 0 1px rgba(0,0,0,0.35); transform: scale(1.12); }
+        #pcsPiano { flex: 0 1 190px; min-width: 120px; height: 44px; touch-action: manipulation; cursor: pointer; }
+        #pcsPiano .pcs-wk { stroke: #55524a; stroke-width: 1; }
+        #pcsPiano .pcs-bk { stroke: #000; stroke-width: 1; }
+        .pcs-num { font-size: 17px; }
+        .pcs-spd { font-size: 22px; letter-spacing: -1px; padding-bottom: 5px; }
+        .pcs-sep { flex: 0 0 8px; }
+        @media (max-width: 420px) {
+            #pcsRow4 .pcs-btn { width: 36px; height: 36px; }
+            #pcsRow4 .pcs-row { gap: 5px; min-height: 36px; }
+        }
+        @media (max-width: 360px) {
+            .pcs-btn { width: 38px; height: 38px; } .pcs-dot { width: 30px; height: 30px; } .pcs-row { gap: 5px; }
+        }
+        /* Celular/tableta apaisados con poca altura: los controles pasan a una columna a la derecha. */
+        @media (max-height: 520px) and (orientation: landscape) {
+            body[data-section="pintar"] #pcsRoot { flex-direction: row; }
+            #pcsControls { flex: 0 0 300px; width: 300px; max-width: 300px; align-self: stretch; justify-content: center; padding: 8px 10px 8px 0; gap: 4px; overflow-y: auto; }
+            .pcs-row { min-height: 38px; }
+            #pcsStage { padding: 8px 8px 8px 10px; }
+            .pcs-btn { width: 36px; height: 36px; } .pcs-dot { width: 28px; height: 28px; }
+            #pcsPiano { height: 38px; flex-basis: 130px; min-width: 90px; }
+        }
+    </style>
 </head>
 <body class="compact">
 
@@ -3871,6 +3956,51 @@
              drawTabletPointerDown()/Up() -- a pedido EXPLÍCITO del usuario, "que el lápiz óptico
              funcione como tecla MIDI del controlador". -->
         <canvas id="drawTabletCanvas" aria-label="Lienzo de dibujo libre: use el lápiz óptico o el mouse para pintar con el color de sonido elegido en la Paleta de Sonidos"></canvas>
+
+        <!-- "PINTA CON SONIDOS" (formato nuevo, ver el comentario en <style> junto a #pcsRoot y el 4º
+             <script> con window.pcs): hoja cuadriculada + línea de reproducción + 4 filas de controles. -->
+        <div id="pcsRoot" role="application" aria-label="Pinta con Sonidos: hoja de dibujo con línea de reproducción">
+            <div id="pcsStage"><div id="pcsPaper"><canvas id="pcsCanvas" aria-label="Hoja de dibujo cuadriculada"></canvas></div></div>
+            <div id="pcsControls">
+                <div class="pcs-row pcs-spread" id="pcsRow1">
+                    <button type="button" class="pcs-btn" id="pcsPlay" data-act="play" aria-label="Pausa / reproducir"></button>
+                    <button type="button" class="pcs-btn pcs-on" id="pcsPen" data-act="pen" aria-label="Lápiz"><svg viewBox="0 0 24 24"><path d="M3 21l1-5L16.5 3.5a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 1 0 2.8L8 20l-5 1zm3.2-4.1l-.6 2.5 2.5-.6L18.6 8.3l-1.9-1.9L6.2 16.9z"/></svg></button>
+                    <button type="button" class="pcs-btn" id="pcsEraser" data-act="eraser" aria-label="Borrador"><svg viewBox="0 0 24 24"><path d="M15.1 3.6a2 2 0 0 1 2.8 0l3.5 3.5a2 2 0 0 1 0 2.8L12 19.3H20v2H8.5l-5.4-5.4a2 2 0 0 1 0-2.8l12-12zM5 14.5l3.8 3.8 3.8-3.8-3.8-3.8L5 14.5z" transform="translate(0 -1)"/></svg></button>
+                    <button type="button" class="pcs-btn" id="pcsUndo" data-act="undo" aria-label="Deshacer"><svg viewBox="0 0 24 24"><path d="M12.5 8c-2.6 0-5 1-6.8 2.6L2 7v9h9l-3.6-3.6A8 8 0 0 1 12.5 10c3.5 0 6.5 2.3 7.5 5.5l2.4-.8C21.1 10.7 17.2 8 12.5 8z"/></svg></button>
+                    <span class="pcs-tempo">
+                        <button type="button" class="pcs-btn" data-act="bpm-" aria-label="Bajar tempo">&minus;</button>
+                        <span id="pcsBpm">80</span>
+                        <button type="button" class="pcs-btn" data-act="bpm+" aria-label="Subir tempo">+</button>
+                    </span>
+                </div>
+                <div class="pcs-row" id="pcsRow2" aria-label="Colores de la tonalidad"></div>
+                <div class="pcs-row" id="pcsRow3">
+                    <svg id="pcsPiano" viewBox="0 0 140 44" preserveAspectRatio="none" aria-label="Mini piano: tonalidad con la que suenan los trazos"></svg>
+                    <button type="button" class="pcs-btn" id="pcsMode" data-act="mode" aria-label="Mayor / menor" title="Mayor / menor">M</button>
+                    <span class="pcs-sep"></span>
+                    <button type="button" class="pcs-btn pcs-on" data-act="dir" data-v="lr" aria-label="De izquierda a derecha">&#9654;</button>
+                    <button type="button" class="pcs-btn" data-act="dir" data-v="rl" aria-label="De derecha a izquierda">&#9664;</button>
+                    <button type="button" class="pcs-btn" data-act="dir" data-v="pp" aria-label="Ida y vuelta">&#8644;</button>
+                </div>
+                <div class="pcs-row pcs-spread" id="pcsRow4">
+                    <span class="pcs-row">
+                        <button type="button" class="pcs-btn pcs-num pcs-on" data-act="sheet" data-v="0" aria-label="Hoja 1">1</button>
+                        <button type="button" class="pcs-btn pcs-num" data-act="sheet" data-v="1" aria-label="Hoja 2">2</button>
+                        <button type="button" class="pcs-btn pcs-num" data-act="sheet" data-v="2" aria-label="Hoja 3">3</button>
+                    </span>
+                    <span class="pcs-row pcs-modes" aria-label="Lectura: puntos, glissando o ambos">
+                        <button type="button" class="pcs-btn" data-act="rmode" data-v="pts" aria-label="Leer por puntos: una nota por cruce" title="Puntos"><svg viewBox="0 0 24 24"><circle cx="5" cy="16" r="2.6"/><circle cx="12" cy="8" r="2.6"/><circle cx="19" cy="14" r="2.6"/></svg></button>
+                        <button type="button" class="pcs-btn" data-act="rmode" data-v="gliss" aria-label="Glissando: la nota sigue la línea de forma continua" title="Glissando"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M3 17C6.500 17 6.500 7 10 7S13.500 17 17 17 19.500 11 21 9"/></svg></button>
+                        <button type="button" class="pcs-btn" data-act="rmode" data-v="both" aria-label="Puntos y glissando al mismo tiempo" title="Puntos + glissando"><svg viewBox="0 0 24 24"><path d="M3 17C6.500 17 6.500 7 10 7S13.500 17 17 17 19.500 11 21 9" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"/><circle cx="6" cy="14.500" r="2.700"/><circle cx="12" cy="9.500" r="2.700"/><circle cx="18" cy="15" r="2.700"/></svg></button>
+                    </span>
+                    <span class="pcs-row">
+                        <button type="button" class="pcs-btn pcs-spd" data-act="speed" data-v="0" aria-label="Densidad baja (negras)">&bull;</button>
+                        <button type="button" class="pcs-btn pcs-spd pcs-on" data-act="speed" data-v="1" aria-label="Densidad media (corcheas)">&bull;&bull;</button>
+                        <button type="button" class="pcs-btn pcs-spd" data-act="speed" data-v="2" aria-label="Densidad alta (semicorcheas)">&bull;&bull;&bull;</button>
+                    </span>
+                </div>
+            </div>
+        </div>
 
         <!-- "MODOS GRIEGOS" (ver el comentario grande junto a #greekModesContainer en <style>):
              instrumento propio de 7 notas por octava, hermano de #wave/#drawTabletCanvas dentro del
@@ -10734,7 +10864,7 @@
             // fila microtonal NUNCA llegan a esta rama -- ese teclado no existe en la sección "pintar"
             // (mismo criterio que #pianoContainer, ver la regla CSS body[data-section="pintar"]), así
             // que este hook queda intacto para el piano de 88 teclas de siempre.
-            if (document.body.dataset.section === 'pintar' && !paintNoteHookSuppressed) setBrushColorFromPitchClass(pitchClass);
+            if (document.body.dataset.section === 'pintar' && !paintNoteHookSuppressed) { setBrushColorFromPitchClass(pitchClass); if (window.pcs && !window.pcs.own) window.pcs.pickPc(pitchClass); }
             const octaveOffset = Math.floor((midi - 60) / 12);
             fixedCents = getFixedKeyboardCents()[pitchClass];
             // "Modos Griegos (Archytas)" de Escala Musical: afinación EXACTA del grado (ver getGreekExactFixedCents()).
@@ -11363,6 +11493,7 @@
     // cualquier nota que siga físicamente sostenida.
     function clearScreenButton(evt) {
         if (evt) evt.stopPropagation();
+        if (document.body.dataset.section === 'pintar' && window.pcs) { window.pcs.clearSheet(); showNotification('HOJA LIMPIA'); return; }
         clearVisualCanvas();
         showNotification('PANTALLA LIMPIA');
     }
@@ -11567,7 +11698,7 @@
         // document.body.dataset.section directamente (no currentSection) por el mismo motivo que el
         // resto de los chequeos de sección de este archivo: es la fuente de verdad que ya usa el
         // CSS de "MENÚ PROPIO POR SECCIÓN".
-        if (document.body.dataset.section === 'pintar') { undoDrawTabletStroke(); return; }
+        if (document.body.dataset.section === 'pintar') { if (window.pcs) window.pcs.undo(); return; }
         // Igual que clearVisualCanvas(): si MODO REPRODUCCIÓN está reproduciendo lo que se está por
         // deshacer, se corta -- lo que sigue sonando ya no correspondería a lo que queda pintado.
         if (playbackState !== 'stopped') stopPlayback();
@@ -13681,6 +13812,58 @@
     const metroLayers = new Set([2, 3]);
     let metroLocalCtx = null, metroT0 = 0, metroNext = {}, metroHorizon = 0, metroTimer = null, metroRaf = null, metroTapTimes = [];
     let metroEls = null, metroNoiseBuf = null, metroOut = null;
+    // Volumen del metrónomo (0..1): escala la percusión (ganancia de salida) y la velocidad de las notas del piano.
+    let metroVol = 1, metroVolBeforeMute = 1;
+    try { const sv = parseFloat(localStorage.getItem('metro_vol_v1')); if (isFinite(sv)) metroVol = Math.max(0, Math.min(1, sv)); if (metroVol > 0) metroVolBeforeMute = metroVol; } catch (e) {}
+    // Sonido por capa: cada número del metrónomo puede usar un instrumento General MIDI (motor gmSynth/SoundFont de PrismaKeys).
+    // metroSounds[n] = nº de programa GM (0-127); sin entrada = sonido predeterminado (percusión / notas del piano).
+    // Se usan los canales GM libres (13, 14, 15: el teclado principal ya ocupa 0-8 y 10-12 y el 9 es percusión), así que
+    // pueden convivir hasta 3 instrumentos GM distintos a la vez (varias capas con el MISMO instrumento comparten canal).
+    const METRO_GM_CHANNELS = [13, 14, 15];
+    // Percusión / batería General MIDI: en GM la batería vive en el canal 9 (el de percusión) y cada NOTA es un sonido distinto
+    // (bombo, caja, hi-hat...). Se guarda como 1000 + nº de nota (1035..1081); el "kit" (Estándar, Room, Power...) es el
+    // programa de ese canal y es único para todo el metrónomo. No consume ninguno de los 3 canales de instrumentos.
+    const METRO_DRUM_CH = 9;
+    const METRO_DRUMS = {35:'Bombo acústico',36:'Bombo',37:'Aro de caja (side stick)',38:'Caja acústica',39:'Palmas',40:'Caja eléctrica',41:'Tom grave 2',42:'Hi-hat cerrado',43:'Tom grave 1',44:'Hi-hat de pedal',45:'Tom bajo',46:'Hi-hat abierto',47:'Tom medio-bajo',48:'Tom medio-alto',49:'Platillo crash 1',50:'Tom alto',51:'Platillo ride 1',52:'Platillo chino',53:'Campana del ride',54:'Pandereta',55:'Platillo splash',56:'Cencerro',57:'Platillo crash 2',58:'Vibraslap',59:'Platillo ride 2',60:'Bongó alto',61:'Bongó bajo',62:'Conga alta (apagada)',63:'Conga alta (abierta)',64:'Conga baja',65:'Timbal alto',66:'Timbal bajo',67:'Agogó alto',68:'Agogó bajo',69:'Cabasa',70:'Maracas',71:'Silbato corto',72:'Silbato largo',73:'Güiro corto',74:'Güiro largo',75:'Claves',76:'Caja china alta',77:'Caja china baja',78:'Cuíca (apagada)',79:'Cuíca (abierta)',80:'Triángulo (apagado)',81:'Triángulo (abierto)'};
+    const METRO_KITS = [[0, 'Estándar'], [8, 'Room'], [16, 'Power'], [24, 'Electrónico'], [25, 'TR-808'], [32, 'Jazz'], [40, 'Brush'], [48, 'Orquesta']];
+    const metroIsDrum = (p) => p >= 1035 && p <= 1081;
+    let metroKit = 0;
+    try { const k = parseInt(localStorage.getItem('metro_kit_v1'), 10); if (METRO_KITS.some(x => x[0] === k)) metroKit = k; } catch (e) {}
+    let metroSounds = {}, metroGmChan = {}, metroSndSel = null, metroGmOverflow = false;
+    try { const o = JSON.parse(localStorage.getItem('metro_sounds_v1') || '{}'); Object.keys(o).forEach(k => { const n = +k, p = +o[k]; if (n >= 1 && n <= 12 && p >= 1035 && p <= 1081) metroSounds[n] = p; }); } catch (e) {}
+    function metroSaveSounds() { try { localStorage.setItem('metro_sounds_v1', JSON.stringify(metroSounds)); } catch (e) {} }
+    function metroApplyGM() {
+        metroGmChan = {}; metroGmOverflow = false;
+        if (!gmSynthReady || !gmSynth) return;
+        const order = [...metroLayers].sort((a, b) => a - b).concat(Object.keys(metroSounds).map(Number).filter(n => !metroLayers.has(n)).sort((a, b) => a - b));
+        order.forEach(n => {
+            const pr = metroSounds[n];
+            if (pr === undefined || metroIsDrum(pr) || metroGmChan[pr] !== undefined) return;
+            const used = Object.keys(metroGmChan).length;
+            if (used >= METRO_GM_CHANNELS.length) { if (metroLayers.has(n)) metroGmOverflow = true; return; }
+            metroGmChan[pr] = METRO_GM_CHANNELS[used];
+        });
+        Object.keys(metroGmChan).forEach(pr => { try { gmSynth.programChange(metroGmChan[pr], +pr); } catch (e) {} });
+        try { gmSynth.programChange(METRO_DRUM_CH, metroKit); } catch (e) {}
+    }
+    function metroGmFor(n) {
+        const pr = metroSounds[n];
+        if (pr === undefined || !gmSynthReady || !gmSynth) return null;
+        if (metroIsDrum(pr)) return METRO_DRUM_CH;
+        const ch = metroGmChan[pr];
+        return ch === undefined ? null : ch;
+    }
+    // Preferencias del metrónomo (se guardan en este navegador): tempo y capas activas (el volumen y los sonidos por capa
+    // tienen su propia clave, ver arriba).
+    try {
+        const mp = JSON.parse(localStorage.getItem('metro_prefs_v1') || 'null');
+        if (mp) {
+            if (isFinite(mp.bpm)) metroBpm = Math.max(METRO_MIN_BPM, Math.min(METRO_MAX_BPM, Math.round(mp.bpm)));
+            if (Array.isArray(mp.layers)) { metroLayers.clear(); mp.layers.forEach(n => { n = +n; if (n >= 1 && n <= 12) metroLayers.add(n); }); }
+        }
+    } catch (e) {}
+    function metroSavePrefs() { try { localStorage.setItem('metro_prefs_v1', JSON.stringify({ bpm: metroBpm, layers: [...metroLayers].sort((a, b) => a - b) })); } catch (e) {} }
+    function metroApplyVol() { if (metroOut) { try { metroOut.gain.setTargetAtTime(0.9 * metroVol, metroOut.context.currentTime, 0.015); } catch (e) { metroOut.gain.value = 0.9 * metroVol; } } }
 
     function metroCtx() {
         let ctx = aCtx;
@@ -13691,7 +13874,7 @@
         if (ctx.state === 'suspended') ctx.resume();
         if (!metroOut || metroOut.context !== ctx) {
             metroOut = ctx.createGain();
-            metroOut.gain.value = 0.9;
+            metroOut.gain.value = 0.9 * metroVol;
             metroOut.connect(ctx.destination);
         }
         return ctx;
@@ -13702,11 +13885,22 @@
         const host = document.getElementById('metroWin');
         if (!host || metroEls) return;
         const layerBtns = METRO_COLORS.map((c, i) => `<button type="button" data-n="${i + 1}" style="--lc:${c}" aria-label="Capa ${i + 1}" aria-pressed="false">${i + 1}</button>`).join('');
+        let sndOptions = '<option value="default">Predeterminado (percusión sintética)</option>';
+        sndOptions += Object.keys(METRO_DRUMS).map(k => `<option value="${1000 + +k}">${METRO_DRUMS[k]}</option>`).join('');
+        const kitOptions = METRO_KITS.map(k => `<option value="${k[0]}">${k[1]}</option>`).join('');
         host.innerHTML = `
             <div class="metro-head" id="metroHead"><span class="metro-title">METRÓNOMO</span><button type="button" class="metro-x" id="metroClose" aria-label="Cerrar metrónomo">✕</button></div>
             <div class="metro-body">
                 <div class="metro-canvas-wrap"><canvas id="metroCanvas" aria-label="Círculo de polirritmia"></canvas></div>
                 <div class="metro-layers" id="metroLayers">${layerBtns}</div>
+                <div class="metro-snd" id="metroSnd">
+                    <div class="metro-snd-head"><span id="metroSndTitle">SONIDO DE LA CAPA</span><button type="button" class="metro-snd-x" id="metroSndClose" aria-label="Cerrar selector de sonido">✕</button></div>
+                    <select id="metroSndSel" aria-label="Sonido de batería de esta capa">${sndOptions}</select>
+                    <div class="metro-kit" id="metroKitRow"><label for="metroKitSel">KIT DE BATERÍA</label><select id="metroKitSel" aria-label="Kit de batería General MIDI">${kitOptions}</select></div>
+                    <div class="metro-row"><button type="button" class="mbtn" id="metroSndTest">▶ PROBAR</button><button type="button" class="mbtn" id="metroSndReset">PREDETERMINADO</button></div>
+                    <div class="metro-snd-note" id="metroSndNote"></div>
+                    <label class="mbtn metro-snd-file" id="metroSndFileLbl">CARGAR SOUNDFONT (.sf2 / .sf3)<input type="file" id="metro-sf-file" accept=".sf2,.sf3" onchange="loadGMSoundFontFile(event)"></label>
+                </div>
                 <div class="metro-ratio" id="metroRatio"></div>
                 <div class="metro-tempo">
                     <button type="button" class="mbtn" id="metroMinus" aria-label="Más lento">−</button>
@@ -13714,21 +13908,35 @@
                     <button type="button" class="mbtn" id="metroPlus" aria-label="Más rápido">+</button>
                 </div>
                 <input type="range" id="metroSlider" min="${METRO_MIN_BPM}" max="${METRO_MAX_BPM}" step="1" value="60" aria-label="Velocidad en BPM">
+                <div class="metro-vol"><button type="button" class="mbtn metro-vol-btn" id="metroVolBtn" aria-label="Volumen del metrónomo (tocar para silenciar)"></button><input type="range" id="metroVolSlider" min="0" max="100" step="1" value="100" aria-label="Volumen del metrónomo"><span class="metro-vol-val" id="metroVolVal">100%</span></div>
                 <div class="metro-row"><button type="button" class="mbtn metro-play" id="metroPlay">▶ INICIAR</button><button type="button" class="mbtn" id="metroTap">TAP</button></div>
-                <div class="metro-row"><button type="button" class="mbtn metro-mode on" data-mode="perc">PERCUSIÓN</button><button type="button" class="mbtn metro-mode" data-mode="notes">NOTAS PIANO</button></div>
             </div>`;
         metroEls = {
             host, head: host.querySelector('#metroHead'), canvas: host.querySelector('#metroCanvas'),
             bpmVal: host.querySelector('#metroBpmVal'), bpmSub: host.querySelector('#metroBpmSub'), slider: host.querySelector('#metroSlider'),
+            volBtn: host.querySelector('#metroVolBtn'), volSlider: host.querySelector('#metroVolSlider'), volVal: host.querySelector('#metroVolVal'),
             play: host.querySelector('#metroPlay'), ratio: host.querySelector('#metroRatio'), layers: host.querySelector('#metroLayers')
         };
         host.querySelector('#metroClose').addEventListener('click', () => toggleMetroWindow(false));
-        metroEls.layers.addEventListener('click', (e) => { const b = e.target.closest('button[data-n]'); if (b) metroToggleLayer(parseInt(b.dataset.n, 10)); });
+        metroEls.layers.addEventListener('click', (e) => { const b = e.target.closest('button[data-n]'); if (b) metroLayerTap(parseInt(b.dataset.n, 10)); });
+        metroEls.snd = host.querySelector('#metroSnd'); metroEls.sndSel = host.querySelector('#metroSndSel');
+        metroEls.sndTitle = host.querySelector('#metroSndTitle'); metroEls.sndNote = host.querySelector('#metroSndNote'); metroEls.sndFile = host.querySelector('#metroSndFileLbl');
+        metroEls.kitSel = host.querySelector('#metroKitSel'); metroEls.kitRow = host.querySelector('#metroKitRow');
+        metroEls.kitSel.addEventListener('change', () => {
+            metroKit = parseInt(metroEls.kitSel.value, 10); try { localStorage.setItem('metro_kit_v1', String(metroKit)); } catch (e) {}
+            metroApplyGM(); if (metroSndSel) metroPreview(metroSndSel);
+        });
+        host.querySelector('#metroSndClose').addEventListener('click', () => metroCloseSnd());
+        host.querySelector('#metroSndTest').addEventListener('click', () => metroPreview(metroSndSel));
+        host.querySelector('#metroSndReset').addEventListener('click', () => metroSetSound(metroSndSel, 'default'));
+        metroEls.sndSel.addEventListener('change', () => metroSetSound(metroSndSel, metroEls.sndSel.value));
         host.querySelector('#metroMinus').addEventListener('click', () => metroSetBpm(metroBpm - 1));
         host.querySelector('#metroPlus').addEventListener('click', () => metroSetBpm(metroBpm + 1));
         metroEls.slider.addEventListener('input', () => metroSetBpm(parseInt(metroEls.slider.value, 10)));
         metroEls.play.addEventListener('click', () => metroPlaying ? metroStop() : metroStart());
         host.querySelector('#metroTap').addEventListener('click', metroTap);
+        metroEls.volSlider.addEventListener('input', () => metroSetVol(parseInt(metroEls.volSlider.value, 10) / 100));
+        metroEls.volBtn.addEventListener('click', () => { if (metroVol > 0) { metroVolBeforeMute = metroVol; metroSetVol(0); } else metroSetVol(metroVolBeforeMute || 0.8); });
         host.querySelectorAll('.metro-mode').forEach(b => b.addEventListener('click', () => metroSetMode(b.dataset.mode)));
         makeFloatingDraggable(host, metroEls.head);
         metroRefreshUI();
@@ -13737,9 +13945,26 @@
     function metroRefreshUI() {
         const E = metroEls; if (!E) return;
         E.layers.querySelectorAll('button').forEach(b => { const on = metroLayers.has(parseInt(b.dataset.n, 10)); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+        E.layers.querySelectorAll('button').forEach(b => { const n = parseInt(b.dataset.n, 10); b.classList.toggle('sel', n === metroSndSel); b.classList.toggle('has-snd', metroSounds[n] !== undefined); });
+        E.snd.classList.toggle('open', metroSndSel !== null);
+        if (metroSndSel !== null) {
+            E.snd.style.setProperty('--lc', METRO_COLORS[metroSndSel - 1]);
+            E.sndTitle.textContent = 'SONIDO DE LA CAPA ' + metroSndSel;
+            E.sndSel.value = metroSounds[metroSndSel] === undefined ? 'default' : String(metroSounds[metroSndSel]);
+            E.sndNote.textContent = !gmSynthReady ? 'Los sonidos de batería General MIDI necesitan un SoundFont: cargalo acá abajo (se comparte con el resto de PrismaKeys). Hasta entonces suena el sonido predeterminado.'
+                : 'Elegí un sonido de batería para esta capa; todos comparten el kit de arriba.';
+            E.sndFile.style.display = gmSynthReady ? 'none' : '';
+            const dr = metroIsDrum(metroSounds[metroSndSel]);
+            E.kitRow.style.display = dr ? '' : 'none'; E.kitSel.value = String(metroKit);
+            if (dr && gmSynthReady) E.sndNote.textContent = 'Todas las capas con batería comparten el mismo kit. Si tu SoundFont no trae ese kit, suena el estándar.';
+        }
         const act = [...metroLayers].sort((a, b) => a - b);
         E.ratio.textContent = act.length ? (act.length > 1 ? 'POLIRRITMIA ' + act.join(' : ') : 'RITMO DE ' + act[0] + ' POR VUELTA') : 'ELEGÍ UNA O MÁS FIGURAS';
         E.bpmVal.textContent = String(metroBpm);
+        E.volSlider.value = String(Math.round(metroVol * 100));
+        E.volVal.textContent = Math.round(metroVol * 100) + '%';
+        E.volBtn.innerHTML = METRO_VOL_ICON(metroVol === 0 ? 0 : metroVol < 0.5 ? 1 : 2);
+        E.volBtn.classList.toggle('on', metroVol === 0);
         E.slider.value = String(metroBpm);
         E.bpmSub.textContent = `1 vuelta = 1 tiempo · ${metroPeriod().toFixed(2)} s`;
         E.play.textContent = metroPlaying ? '■ DETENER' : '▶ INICIAR';
@@ -13749,12 +13974,46 @@
         if (bar) { bar.classList.toggle('on', metroOpen); bar.classList.toggle('playing', metroPlaying); bar.setAttribute('aria-expanded', String(metroOpen)); }
     }
 
+    function metroSetVol(v) {
+        metroVol = Math.max(0, Math.min(1, v));
+        if (metroVol > 0) metroVolBeforeMute = metroVol;
+        try { localStorage.setItem('metro_vol_v1', String(metroVol)); } catch (e) {}
+        metroApplyVol(); metroRefreshUI();
+    }
+    const METRO_VOL_ICON = (lvl) => '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 9v6h4l5 4V5L7 9H3z"/>' +
+        (lvl === 0 ? '<path d="M15 9.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'
+            : (lvl >= 1 ? '<path d="M15 9.5a3.500 3.500 0 0 1 0 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>' : '') +
+              (lvl >= 2 ? '<path d="M17.500 7a7 7 0 0 1 0 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>' : '')) + '</svg>';
+    // Tocar un número: si está apagado lo enciende y abre su selector de sonido; si ya está encendido pero no seleccionado,
+    // solo abre su selector; si ya está seleccionado, lo apaga y cierra el selector.
+    function metroLayerTap(n) {
+        if (!metroLayers.has(n)) { metroToggleLayer(n); metroOpenSnd(n); }
+        else if (metroSndSel !== n) metroOpenSnd(n);
+        else { metroToggleLayer(n); metroCloseSnd(); }
+    }
+    function metroOpenSnd(n) { metroSndSel = n; metroRefreshUI(); }
+    function metroCloseSnd() { metroSndSel = null; metroRefreshUI(); }
+    function metroSetSound(n, v) {
+        if (!n) return;
+        if (v === 'default') delete metroSounds[n]; else metroSounds[n] = parseInt(v, 10);
+        metroSaveSounds(); metroApplyGM(); metroRefreshUI();
+        if (v !== 'default' && !gmSynthReady) showNotification('CARGÁ UN SOUNDFONT PARA ESCUCHAR LA BATERÍA -- MIENTRAS TANTO SUENA EL SONIDO PREDETERMINADO');
+        else metroPreview(n);
+    }
+    function metroPreview(n) {
+        if (!n) return;
+        const ctx = metroCtx();
+        if (metroMode === 'notes' && !aCtx && metroGmFor(n) === null) { showNotification('PARA USAR LAS NOTAS DEL PIANO, PRIMERO ENCENDÉ PRISMAKEYS (ENCENDIDO/APAGADO)'); return; }
+        metroPlayHit(ctx, n, true, ctx.currentTime + 0.02, true);
+    }
     function metroToggleLayer(n) {
         if (metroLayers.has(n)) { metroLayers.delete(n); delete metroNext[n]; }
         else {
             metroLayers.add(n);
             if (metroPlaying) { const ctx = metroCtx(); metroNext[n] = Math.max(0, Math.ceil((ctx.currentTime + 0.02 - metroT0) / (metroPeriod() / n))); }
         }
+        metroApplyGM();
+        metroSavePrefs();
         metroRefreshUI();
     }
 
@@ -13771,6 +14030,7 @@
             metroNext = {};
             metroLayers.forEach(n => { metroNext[n] = Math.max(0, Math.ceil((from - metroT0) / (metroPeriod() / n) - 1e-6)); });
         } else metroBpm = v;
+        metroSavePrefs();
         metroRefreshUI();
     }
 
@@ -13792,6 +14052,7 @@
     }
 
     function metroStart() {
+        metroApplyGM();
         if (!metroLayers.size) { showNotification('METRÓNOMO: ELEGÍ AL MENOS UNA FIGURA'); return; }
         const ctx = metroCtx();
         metroPlaying = true;
@@ -13827,10 +14088,20 @@
         });
     }
 
-    function metroPlayHit(ctx, n, accent, t) {
+    function metroPlayHit(ctx, n, accent, t, preview) {
+        const gch = metroGmFor(n);
+        if (gch !== null) {   // instrumento General MIDI asignado a esta capa
+            const midi = metroIsDrum(metroSounds[n]) ? metroSounds[n] - 1000 : METRO_NOTES[n - 1], vel = accent ? 0.9 : 0.62;
+            setTimeout(() => {
+                if ((!metroPlaying && !preview) || metroVol <= 0.001) return;
+                try { gmSynth.noteOn(gch, midi, Math.max(1, Math.round(127 * vel * metroVol))); } catch (e) { return; }
+                setTimeout(() => { try { gmSynth.noteOff(gch, midi); } catch (e) { /* ya liberada */ } }, 230);
+            }, Math.max(0, (t - ctx.currentTime) * 1000));
+            return;
+        }
         if (metroMode === 'notes' && aCtx) {
             const midi = METRO_NOTES[n - 1], vel = accent ? 0.9 : 0.62;
-            setTimeout(() => { if (!metroPlaying) return; try { playNote(midi, vel); } catch (e) { /* sin nota */ } setTimeout(() => { try { stopNote(midi); } catch (e) { /* ya liberada */ } }, 170); }, Math.max(0, (t - ctx.currentTime) * 1000));
+            setTimeout(() => { if ((!metroPlaying && !preview) || metroVol <= 0.001) return; try { playNote(midi, vel * metroVol); } catch (e) { /* sin nota */ } setTimeout(() => { try { stopNote(midi); } catch (e) { /* ya liberada */ } }, 170); }, Math.max(0, (t - ctx.currentTime) * 1000));
             return;
         }
         const vol = accent ? 1 : 0.68;
@@ -14073,7 +14344,7 @@
         // Círculo de Diesis, #dc-sf-file) -- más directo y confiable que mirar
         // document.body.dataset.section, que podría no coincidir si esta carga tarda unos segundos y
         // la persona ya cambió de sección mientras tanto.
-        const SF_LOADER_STATUS_BY_INPUT_ID = { 'gm-greek-sf-file': 'gm-greek-sf-status', 'dc-sf-file': 'dc-sf-status' };
+        const SF_LOADER_STATUS_BY_INPUT_ID = { 'gm-greek-sf-file': 'gm-greek-sf-status', 'dc-sf-file': 'dc-sf-status', 'metro-sf-file': 'metro-sf-status' };
         const statusEl = document.getElementById(SF_LOADER_STATUS_BY_INPUT_ID[evt.target.id] || 'gm-sf-status');
         if (statusEl) statusEl.innerText = `CARGANDO "${file.name}"...`;
         showNotification('CARGANDO SOUNDFONT -- PUEDE TARDAR UNOS SEGUNDOS SEGÚN EL TAMAÑO DEL ARCHIVO');
@@ -14123,13 +14394,16 @@
             // #gmGmInstrumentSelect en el HTML), esta sección queda sonando de una con
             // greekGmProgramNumber (no con currentGMProgram, el del teclado principal).
             applyActiveGMChannelPrograms();
+            if (typeof metroApplyGM === 'function') { metroApplyGM(); metroRefreshUI(); }
             if (statusEl) statusEl.innerText = `SOUNDFONT ACTIVO: ${file.name}`;
             // El "sonido activo" que se enciende y el nombre de instrumento que se anuncia dependen
             // de QUÉ sección disparó la carga -- Modos Griegos tiene su propio par (greekSoundMode/
             // greekGmProgramNumber), independiente del teclado principal (currentSoundMode/
             // currentGMProgram), exactamente como pidió el usuario ("selector de instrumento
             // propio").
-            if (evt.target.id === 'gm-greek-sf-file') {
+            if (evt.target.id === 'metro-sf-file') {
+                showNotification('SOUNDFONT CARGADO -- YA PODÉS USAR LA BATERÍA GM EN EL METRÓNOMO');
+            } else if (evt.target.id === 'gm-greek-sf-file') {
                 showNotification(`SOUNDFONT CARGADO -- YA PODÉS ESCUCHAR ${(GM_PROGRAM_NAMES[greekGmProgramNumber] || '').toUpperCase()} EN MODOS GRIEGOS`);
                 if (greekSoundMode !== 'gm') chooseGreekSoundMode('gm');
             } else if (evt.target.id === 'dc-sf-file') {
@@ -14158,6 +14432,7 @@
         if (aCtx && filter) filter.gain.setTargetAtTime(db, aCtx.currentTime, 0.01);
         const lbl = document.getElementById(`eq-${band}-val`);
         if (lbl) lbl.innerText = `${db > 0 ? '+' : ''}${db} dB`;
+        saveFxPrefs();
     }
 
     function setChorusMix(value) {
@@ -14166,6 +14441,7 @@
         if (aCtx && chorusWet) chorusWet.gain.setTargetAtTime((pct / 100) * 0.9, aCtx.currentTime, 0.01);
         const lbl = document.getElementById('chorus-val');
         if (lbl) lbl.innerText = `${pct}%`;
+        saveFxPrefs();
     }
 
     function setDelayTime(value) {
@@ -14174,6 +14450,7 @@
         if (aCtx && delayNode) delayNode.delayTime.setTargetAtTime(ms / 1000, aCtx.currentTime, 0.01);
         const lbl = document.getElementById('delay-time-val');
         if (lbl) lbl.innerText = `${ms} ms`;
+        saveFxPrefs();
     }
 
     function setDelayMix(value) {
@@ -14182,7 +14459,28 @@
         if (aCtx && delayWet) delayWet.gain.setTargetAtTime(pct / 100, aCtx.currentTime, 0.01);
         const lbl = document.getElementById('delay-mix-val');
         if (lbl) lbl.innerText = `${pct}%`;
+        saveFxPrefs();
     }
+    // Preferencias de EFECTOS DE AUDIO (Ecualizador, Coro, Delay/Eco): se guardan en este navegador y se restauran al abrir.
+    let fxRestoring = false;
+    function saveFxPrefs() {
+        if (fxRestoring) return;
+        try { localStorage.setItem('prisma_fx_v1', JSON.stringify({ low: eqLowGainDb, mid: eqMidGainDb, high: eqHighGainDb, chorus: chorusMixPct, dtime: delayTimeMs, dmix: delayMixPct })); } catch (e) {}
+    }
+    function restoreFxPrefs() {
+        let o = null;
+        try { o = JSON.parse(localStorage.getItem('prisma_fx_v1') || 'null'); } catch (e) {}
+        if (!o) return;
+        const num = (v, a, b, d) => (isFinite(v) ? Math.max(a, Math.min(b, +v)) : d);
+        fxRestoring = true;
+        const set = (sel, v) => { const el = document.querySelector('#dd-fx input[oninput^="' + sel + '"]'); if (el) el.value = String(v); };
+        const lo = num(o.low, -12, 12, 0), mi = num(o.mid, -12, 12, 0), hi = num(o.high, -12, 12, 0);
+        const ch = num(o.chorus, 0, 100, 0), dt = num(o.dtime, 50, 800, 300), dm = num(o.dmix, 0, 100, 0);
+        setEQBand('low', lo); setEQBand('mid', mi); setEQBand('high', hi); setChorusMix(ch); setDelayTime(dt); setDelayMix(dm);
+        set("setEQBand('low'", lo); set("setEQBand('mid'", mi); set("setEQBand('high'", hi); set('setChorusMix', ch); set('setDelayTime', dt); set('setDelayMix', dm);
+        fxRestoring = false;
+    }
+    restoreFxPrefs();
     // =================== fin EFECTOS DE AUDIO / MOTOR DE INSTRUMENTOS GM ===================
 
     // ===================== GRABACIÓN DE AUDIO+VIDEO (#prismaRecordBtn) =====================
@@ -17074,6 +17372,7 @@
         // (playbackState arranca en 'stopped' desde el primer momento).
         currentSection = section;
         document.body.dataset.section = section;
+        if (window.pcs) window.pcs.onSection(section);
         document.getElementById('homeScreen').classList.add('hidden');
         document.getElementById('mainAppContainer').classList.remove('hidden');
         // A PEDIDO DEL USUARIO: cambiar de sección desde la pantalla de inicio (o volver a entrar a
@@ -17243,6 +17542,7 @@
         // micrófono se quedaría escuchando de fondo con la pantalla de inicio puesta, sin ningún
         // control visible que lo refleje.
         if (micActive) stopMicInput();
+        if (window.pcs) window.pcs.stop();
         if (typeof metroStop === 'function') { metroStop(); if (metroOpen) toggleMetroWindow(false); }
         if (typeof closeAllInfoWindows === 'function') closeAllInfoWindows();
         if (window.scoreEd) window.scoreEd.close();
@@ -26884,5 +27184,530 @@ const SE_GLYPHS={"gclef":{"d":"M434 -2Q464 103 464 170Q464 223 427 257Q390 291 3
 
 })();
 </script>
+<script>
+/* "PINTA CON SONIDOS" (formato nuevo): hoja cuadriculada + línea de reproducción en bucle. Donde la
+   línea cruza un trazo aparece un punto negro y suena una nota. La altura da el tono (en pasos de la
+   escala vigente); el color elige la nota base del trazo (grado de la tonalidad) y se conserva.
+   Tres hojas independientes. Usa la tónica/modo globales de PrismaKeys (changeTonic/changeScaleMode). */
+(function () {
+    'use strict';
+    var N = 21;                                   // filas = pasos de escala (3 octavas)
+    var SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
+    var NAMES = ['Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'];
+    var COLS = [8, 16, 32];                       // muestras por barrido (8 pulsos): • negras, •• corcheas, ••• semicorcheas
+    var KEY = 'pcs_state_v1';
+    function $(id) { return document.getElementById(id); }
+    function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+    var S = { sheet: 0, sheets: [[], [], []], hist: [[], [], []], tool: 'pen', playing: true, bpm: 80,
+              dir: 'lr', speed: 1, mode: 'gliss', tracks: [], live: [], wrap: false, color: 0, x: 0, sgn: 1, dots: [], active: false, drawing: null,
+              erasing: null, own: false, tonKey: '', nextId: 1, timers: {}, W: 0, H: 0, dpr: 1,
+              grid: null, raf: 0, last: 0 };
+
+    function load() {
+        try {
+            var o = JSON.parse(localStorage.getItem(KEY) || 'null');
+            if (!o) return;
+            if (Array.isArray(o.sheets) && o.sheets.length === 3) S.sheets = o.sheets.map(function (a) { return Array.isArray(a) ? a : []; });
+            ['bpm', 'speed', 'sheet', 'color'].forEach(function (k) { if (typeof o[k] === 'number') S[k] = o[k]; });
+            if (o.dir === 'lr' || o.dir === 'rl' || o.dir === 'pp') S.dir = o.dir;
+            if (o.v === 2 && (o.mode === 'pts' || o.mode === 'gliss' || o.mode === 'both')) S.mode = o.mode;
+            S.bpm = clamp(S.bpm, 30, 240); S.speed = clamp(S.speed | 0, 0, 2); S.sheet = clamp(S.sheet | 0, 0, 2);
+            S.color = clamp(S.color | 0, 0, 6);
+            S.sheets.forEach(function (a) { a.forEach(function (s) { s.id = S.nextId++; }); });
+        } catch (e) {}
+    }
+    function save() {
+        try {
+            localStorage.setItem(KEY, JSON.stringify({ sheets: S.sheets, bpm: S.bpm, speed: S.speed, sheet: S.sheet, dir: S.dir, color: S.color, mode: S.mode, v: 2 }));
+        } catch (e) {}
+    }
+
+    /* ---------- tonalidad (leída de PrismaKeys) ---------- */
+    function ton() {
+        var minor = (typeof currentScaleMode !== 'undefined' && currentScaleMode === 'relative_minor');
+        var M = (typeof currentTonicOffset === 'number') ? currentTonicOffset : 0;
+        var T = minor ? (M - 3 + 12) % 12 : M;
+        return { T: T, minor: minor, scale: SCALES[minor ? 'minor' : 'major'] };
+    }
+    function noteCss(pc) {
+        try { return getPureNoteColor(pc).css; } catch (e) { return 'hsl(' + (pc * 30) + ',80%,36%)'; }
+    }
+    function stepToMidi(s, t) {
+        var oct = Math.floor(s / 7), d = ((s % 7) + 7) % 7;
+        var base = 45 + ((t.T + 6) % 12) - 6;
+        return clamp(base + 12 * oct + t.scale[d], 21, 108);
+    }
+
+    /* ---------- sonido ---------- */
+    function resumeAudio() { try { if (typeof aCtx !== 'undefined' && aCtx && aCtx.state === 'suspended') aCtx.resume(); } catch (e) {} }
+    function sound(midi, vel, ms) {
+        S.own = true;
+        try { playNote(midi, vel); } catch (e) {}
+        S.own = false;
+        if (S.timers[midi]) clearTimeout(S.timers[midi]);
+        S.timers[midi] = setTimeout(function () {
+            delete S.timers[midi];
+            S.own = true; try { stopNote(midi); } catch (e) {} S.own = false;
+        }, ms);
+    }
+    function releaseAll() {
+        releaseGliss(true);
+        Object.keys(S.timers).forEach(function (m) {
+            clearTimeout(S.timers[m]); delete S.timers[m];
+            S.own = true; try { stopNote(+m); } catch (e) {} S.own = false;
+        });
+    }
+
+    /* ---------- geometría ---------- */
+    function rowStep(y) { return N - 1 - Math.min(N - 1, Math.floor(y * N)); }
+    function stepF(y) { return N - 0.5 - y * N; }       // paso de escala continuo (centro de fila = entero)
+    function evPt(e) {
+        var r = $('pcsCanvas').getBoundingClientRect();
+        return { x: clamp((e.clientX - r.left) / r.width, 0, 1), y: clamp((e.clientY - r.top) / r.height, 0, 1) };
+    }
+    function distSegPx(p, a, b) {
+        var W = S.W || 1, H = S.H || 1;
+        var px = p.x * W, py = p.y * H, ax = a.x * W, ay = a.y * H, bx = b.x * W, by = b.y * H;
+        var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+        var t = l2 ? clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0, 1) : 0;
+        var cx = ax + t * dx, cy = ay + t * dy;
+        return Math.hypot(px - cx, py - cy);
+    }
+
+    /* ---------- dibujo / borrador ---------- */
+    function startStroke(e) {
+        var t = ton(), p = evPt(e), d = S.color;
+        var raw = rowStep(p.y), shift = 0;
+        for (var k = -3; k <= 3; k++) { if ((((raw + k) % 7) + 7) % 7 === d) { shift = k; break; } }
+        var pc = (t.T + t.scale[d]) % 12;
+        S.drawing = { id: S.nextId++, pc: pc, col: noteCss(pc), shift: shift, pts: [{ x: p.x, y: p.y, st: stepF(p.y) + shift }] };
+        sound(stepToMidi(raw + shift, t), 0.6, 260);
+    }
+    function moveStroke(e) {
+        var s = S.drawing; if (!s) return;
+        var p = evPt(e), l = s.pts[s.pts.length - 1];
+        if (Math.hypot((p.x - l.x) * S.W, (p.y - l.y) * S.H) < 3) return;
+        s.pts.push({ x: p.x, y: p.y, st: stepF(p.y) + s.shift });
+    }
+    function endStroke() {
+        var s = S.drawing; S.drawing = null; if (!s) return;
+        if (s.pts.length > 1) {   // toque con un pequeño temblor: se guarda como un punto limpio
+            var x0 = s.pts[0].x, y0 = s.pts[0].y, moved = false;
+            for (var q = 1; q < s.pts.length; q++) if (Math.hypot((s.pts[q].x - x0) * S.W, (s.pts[q].y - y0) * S.H) > 6) { moved = true; break; }
+            if (!moved) s.pts = [s.pts[0]];
+        }
+        S.sheets[S.sheet].push(s); pushHist({ t: 'add', sheet: S.sheet, s: s }); save();
+    }
+    function eraseAt(e) {
+        var er = S.erasing; if (!er) return;
+        var p = evPt(e), arr = S.sheets[S.sheet];
+        for (var i = arr.length - 1; i >= 0; i--) {
+            var pts = arr[i].pts, hit = false;
+            if (pts.length === 1) hit = Math.hypot((pts[0].x - p.x) * S.W, (pts[0].y - p.y) * S.H) < 18;
+            else for (var j = 0; j < pts.length - 1 && !hit; j++) hit = distSegPx(p, pts[j], pts[j + 1]) < 18;
+            if (hit) { er.items.push({ s: arr[i], i: i }); arr.splice(i, 1); }
+        }
+    }
+    function endErase() {
+        var er = S.erasing; S.erasing = null;
+        if (er && er.items.length) { pushHist({ t: 'del', sheet: S.sheet, items: er.items }); save(); }
+    }
+    function pushHist(op) { var h = S.hist[op.sheet]; h.push(op); if (h.length > 120) h.shift(); }
+    function undo() {
+        var h = S.hist[S.sheet], op = h.pop();
+        if (!op) { try { showNotification('NADA QUE DESHACER'); } catch (e) {} return; }
+        var arr = S.sheets[S.sheet];
+        if (op.t === 'add') { var k = arr.indexOf(op.s); if (k >= 0) arr.splice(k, 1); }
+        else if (op.t === 'del') { for (var i = op.items.length - 1; i >= 0; i--) arr.splice(Math.min(op.items[i].i, arr.length), 0, op.items[i].s); }
+        else if (op.t === 'clear') { S.sheets[S.sheet] = op.all; }
+        save();
+    }
+    function clearSheet() {
+        var arr = S.sheets[S.sheet]; if (!arr.length) return;
+        pushHist({ t: 'clear', sheet: S.sheet, all: arr }); S.sheets[S.sheet] = []; save();
+    }
+
+    // Trazo "diminuto" (un toque, o un trazo de pocos píxeles de ancho): se lee como un punto en su centro, para que
+    // nunca quede entre dos columnas de muestreo del cabezal sin sonar.
+    function tinyInfo(s) {
+        var p = s.pts, W = S.W || 1;
+        if (p.length === 1) return { cx: p[0].x, y: p[0].y, st0: p[0].st, st1: p[0].st };
+        var mnx = 9, mxx = -9, sy = 0, i;
+        for (i = 0; i < p.length; i++) { if (p[i].x < mnx) mnx = p[i].x; if (p[i].x > mxx) mxx = p[i].x; sy += p[i].y; }
+        if ((mxx - mnx) * W >= 12) return null;
+        return { cx: (mnx + mxx) / 2, y: sy / p.length, st0: p[0].st, st1: p[p.length - 1].st, half: (mxx - mnx) / 2 };
+    }
+    /* ---------- cabezal: cruces ---------- */
+    // El cabezal "muestrea" la hoja en columnas regulares (la densidad la da • •• •••): en cada columna,
+    // cada trazo que la cruza hace sonar su nota (altura = paso de escala) y deja un punto negro.
+    function sampleAt(X, t) {
+        var strokes = S.sheets[S.sheet], seen = {}, done = 0, now = performance.now();
+        var ms = clamp(60000 / S.bpm * 8 / COLS[S.speed] * 0.9, 90, 600);
+        for (var si = 0; si < strokes.length && done < 4; si++) {
+            var p = strokes[si].pts, ti = tinyInfo(strokes[si]);
+            if (ti) {
+                if (Math.abs(ti.cx - X) <= 0.5 / COLS[S.speed] + (ti.half || 0)) {
+                    var cand = Math.abs(ti.st1 - ti.st0) >= 1 ? [Math.round(ti.st0), Math.round(ti.st1)] : [Math.round((ti.st0 + ti.st1) / 2)];
+                    for (var ci = 0; ci < cand.length && done < 4; ci++) {
+                        if (seen[cand[ci]]) continue;
+                        seen[cand[ci]] = 1; done++;
+                        sound(stepToMidi(cand[ci], t), 0.62, ms);
+                        S.dots.push({ x: X, y: ti.y, t: now });
+                    }
+                }
+                continue;
+            }
+            for (var i = 0; i < p.length && done < 4; i++) {
+                var a = p[i], b = i < p.length - 1 ? p[i + 1] : null, y, st;
+                if (!b) continue;
+                {
+                    var mn = Math.min(a.x, b.x), mx = Math.max(a.x, b.x);
+                    if (X < mn || X > mx) continue;
+                    var u = mx - mn < 1e-9 ? 0.5 : (X - a.x) / (b.x - a.x);
+                    y = a.y + (b.y - a.y) * u; st = Math.round(a.st + (b.st - a.st) * u);
+                }
+                if (seen[st]) continue;
+                seen[st] = 1; done++;
+                sound(stepToMidi(st, t), 0.62, ms);
+                S.dots.push({ x: X, y: y, t: now });
+            }
+        }
+    }
+    function detect(x0, x1) {
+        var C = COLS[S.speed], lo = Math.min(x0, x1), hi = Math.max(x0, x1), fwd = x1 >= x0, t = null;
+        for (var k = Math.max(0, Math.ceil(lo * C - 0.5)); k < C; k++) {
+            var X = (k + 0.5) / C;
+            if (X > hi + 1e-12) break;
+            if (fwd ? (X > lo && X <= hi) : (X >= lo && X < hi)) { if (!t) t = ton(); sampleAt(X, t); }
+        }
+    }
+    /* ---------- glissando: una voz continua que sigue la altura del trazo mientras el cabezal lo toca ---------- */
+    function stFreq(stF, t) {
+        var lo = Math.floor(stF), fr = stF - lo, m = stepToMidi(lo, t) * (1 - fr) + stepToMidi(lo + 1, t) * fr;
+        var ref = (typeof mainReferenceDoHz === 'number' && mainReferenceDoHz > 0) ? mainReferenceDoHz : 261.63;
+        return ref * Math.pow(2, (m - 60) / 12);
+    }
+    function glVoiceStart(f0) {
+        try {
+            if (typeof aCtx === 'undefined' || !aCtx || (typeof isPower !== 'undefined' && !isPower)) return null;
+            var now = aCtx.currentTime, o = aCtx.createOscillator(), o2 = aCtx.createOscillator(), g = aCtx.createGain();
+            o.type = 'triangle'; o2.type = 'sine'; o.frequency.setValueAtTime(f0, now); o2.frequency.setValueAtTime(f0 * 2, now);
+            var g2 = aCtx.createGain(); g2.gain.value = 0.25; o2.connect(g2); g2.connect(g); o.connect(g);
+            g.gain.setValueAtTime(0.0001, now); g.gain.linearRampToValueAtTime(0.17, now + 0.03);
+            var dest = (typeof masterGain !== 'undefined' && masterGain) ? masterGain : aCtx.destination;
+            g.connect(dest); o.start(now); o2.start(now);
+            return { o: o, o2: o2, g: g, g2: g2, until: 0 };
+        } catch (e) { return null; }
+    }
+    function glVoiceFreq(v, f, from, ms) {
+        try {
+            var now = aCtx.currentTime;
+            if (from) {
+                v.o.frequency.cancelScheduledValues(now); v.o2.frequency.cancelScheduledValues(now);
+                v.o.frequency.setValueAtTime(from, now); v.o2.frequency.setValueAtTime(from * 2, now);
+                v.o.frequency.linearRampToValueAtTime(f, now + ms / 1000); v.o2.frequency.linearRampToValueAtTime(f * 2, now + ms / 1000);
+            } else { v.o.frequency.setTargetAtTime(f, now, 0.02); v.o2.frequency.setTargetAtTime(f * 2, now, 0.02); }
+        } catch (e) {}
+    }
+    function glVoiceStop(v) {
+        try {
+            var now = aCtx.currentTime;
+            v.g.gain.cancelScheduledValues(now); v.g.gain.setValueAtTime(Math.max(v.g.gain.value, 0.0001), now);
+            v.g.gain.linearRampToValueAtTime(0.0001, now + 0.09);
+            v.o.stop(now + 0.12); v.o2.stop(now + 0.12);
+            setTimeout(function () { try { v.g.disconnect(); } catch (e) {} }, 400);
+        } catch (e) {}
+    }
+    // Cada cruce del cabezal con un trazo es una "pista" (track): su punto negro y su voz siguen la línea de
+    // forma continua, subiendo y bajando, sin cortar el sonido (un trazo en zigzag da varios puntos a la vez).
+    var MAXV = 5, MAXLIVE = 60;
+    function releaseGliss(force) {
+        var now = performance.now(), keep = [];
+        S.tracks.forEach(function (tr) {
+            if (force || (now >= tr.until && now - tr.seen > 70)) { if (tr.v) glVoiceStop(tr.v); }
+            else keep.push(tr);
+        });
+        S.tracks = keep;
+        if (force !== false) S.live = [];
+    }
+    function glissUpdate(lo, hi, X) {
+        var t = ton(), now = performance.now(), W = S.W || 1, strokes = S.sheets[S.sheet];
+        var contacts = [];
+        for (var si = 0; si < strokes.length; si++) {
+            var s = strokes[si], p = s.pts, mine = [];
+            var ti = tinyInfo(s);
+            if (ti) {   // punto suelto / trazo diminuto: suena cuando el cabezal pasa por encima
+                var rx = 7 / W + (ti.half || 0);
+                if (ti.cx + rx >= lo && ti.cx - rx <= hi) {
+                    if (Math.abs(ti.st1 - ti.st0) >= 1) contacts.push({ sid: s.id, st: ti.st1, from: ti.st0, y: ti.y, vertical: true });
+                    else contacts.push({ sid: s.id, st: (ti.st0 + ti.st1) / 2, y: ti.y, dot: true });
+                }
+                continue;
+            }
+            for (var i = 0; i < p.length - 1; i++) {
+                var a = p[i], b = p[i + 1], mn = Math.min(a.x, b.x), mx = Math.max(a.x, b.x);
+                if (mx < lo || mn > hi) continue;
+                if ((mx - mn) * W < 2) { mine.push({ sid: s.id, st: b.st, from: a.st, y: b.y, vertical: true }); continue; }
+                var Xc = clamp(X, mn, mx), u = (Xc - a.x) / (b.x - a.x);
+                mine.push({ sid: s.id, st: a.st + (b.st - a.st) * u, y: a.y + (b.y - a.y) * u, vertical: false });
+            }
+            mine.sort(function (m, n) { return m.st - n.st; });
+            for (var k = 0; k < mine.length; k++) {   // une los cruces repetidos en un vértice compartido
+                var last = contacts.length ? contacts[contacts.length - 1] : null;
+                if (last && last.sid === mine[k].sid && !last.vertical && !mine[k].vertical && Math.abs(last.st - mine[k].st) < 0.12) continue;
+                contacts.push(mine[k]);
+            }
+        }
+        // empareja con las pistas del cuadro anterior (misma hoja/trazo, paso más cercano)
+        var used = {}, tracks = S.tracks;
+        contacts.forEach(function (c) {
+            var best = -1, bd = 2.6;
+            for (var i = 0; i < tracks.length; i++) {
+                if (used[i] || tracks[i].sid !== c.sid || tracks[i].vertical) continue;
+                var d = Math.abs(tracks[i].st - c.st);
+                if (d < bd) { bd = d; best = i; }
+            }
+            if (best >= 0 && !c.vertical) { used[best] = 1; c.track = tracks[best]; }
+        });
+        var next = [];
+        tracks.forEach(function (tr, i) {
+            if (!used[i]) {   // sin cruce ahora: breve gracia para no cortar por un hueco mínimo
+                if (now < tr.until || now - tr.seen <= 70) next.push(tr); else if (tr.v) glVoiceStop(tr.v);
+            }
+        });
+        var vcount = 0;
+        next.forEach(function (q) { if (q.v) vcount++; });
+        contacts.forEach(function (q) { if (q.track && q.track.v) vcount++; });
+        var live = [];
+        contacts.forEach(function (c) {
+            var tr = c.track;
+            if (!tr) { tr = { sid: c.sid, st: c.st, v: null, until: c.dot ? now + 260 : 0, seen: now, vertical: !!c.vertical }; }
+            tr.seen = now; tr.st = c.st; tr.y = c.y;
+            if (!tr.v) {
+                if (vcount < MAXV) { tr.v = glVoiceStart(stFreq(c.vertical ? c.from : c.st, t)); if (tr.v) vcount++; }
+            }
+            if (tr.v) {
+                if (c.vertical) { glVoiceFreq(tr.v, stFreq(c.st, t), stFreq(c.from, t), 180); tr.until = now + 190; }
+                else glVoiceFreq(tr.v, stFreq(c.st, t));
+            }
+            next.push(tr);
+            if (live.length < MAXLIVE) live.push({ x: X, y: c.y });
+        });
+        S.tracks = next; S.live = live;
+    }
+    function advance(dtMs) {
+        var d = (dtMs / 1000) * (S.bpm / 60) / 8, guard = 0;   // un barrido = 8 pulsos
+        S.wrap = false;
+        var sgn = S.dir === 'lr' ? 1 : S.dir === 'rl' ? -1 : S.sgn;
+        S.sgn = sgn;
+        while (d > 1e-9 && guard++ < 8) {
+            var x = S.x, target = sgn > 0 ? 1 : 0, room = Math.abs(target - x);
+            if (d < room) { var nx = x + sgn * d; if (S.mode !== 'gliss') detect(x, nx); S.x = nx; d = 0; }
+            else {
+                if (S.mode !== 'gliss') detect(x, target); d -= room; S.wrap = true;
+                if (S.dir === 'pp') { sgn = -sgn; S.sgn = sgn; S.x = target; }
+                else S.x = sgn > 0 ? 0 : 1;
+            }
+        }
+    }
+
+    /* ---------- render ---------- */
+    function resize() {
+        var paper = $('pcsPaper'), cv = $('pcsCanvas'); if (!paper || !cv) return;
+        var w = paper.clientWidth, h = paper.clientHeight; if (w < 10 || h < 10) return;
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        if (w === S.W && h === S.H && dpr === S.dpr && S.grid) return;
+        S.W = w; S.H = h; S.dpr = dpr;
+        cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+        var g = document.createElement('canvas'); g.width = cv.width; g.height = cv.height;
+        var c = g.getContext('2d'); c.scale(dpr, dpr);
+        c.fillStyle = '#fbfaf4'; c.fillRect(0, 0, w, h);
+        var cell = h / N;
+        c.fillStyle = 'rgba(90,110,150,0.05)';
+        for (var s = 0; s < N; s += 7) { var row = N - 1 - s; c.fillRect(0, row * cell, w, cell); }
+        c.lineWidth = 1; c.strokeStyle = 'rgba(110,135,175,0.32)'; c.beginPath();
+        for (var i = 1; i < N; i++) { var y = Math.round(i * cell) + 0.5; c.moveTo(0, y); c.lineTo(w, y); }
+        for (var x = cell; x < w; x += cell) { var xx = Math.round(x) + 0.5; c.moveTo(xx, 0); c.lineTo(xx, h); }
+        c.stroke();
+        S.grid = g;
+    }
+    function drawStroke(c, s, W, H) {
+        var p = s.pts; c.strokeStyle = s.col; c.fillStyle = s.col;
+        if (p.length === 1) { c.beginPath(); c.arc(p[0].x * W, p[0].y * H, 5, 0, 6.2832); c.fill(); return; }
+        c.beginPath(); c.moveTo(p[0].x * W, p[0].y * H);
+        for (var i = 1; i < p.length; i++) c.lineTo(p[i].x * W, p[i].y * H);
+        c.stroke();
+    }
+    function draw() {
+        var cv = $('pcsCanvas'); if (!cv || !S.grid) return;
+        var c = cv.getContext('2d'), W = S.W, H = S.H;
+        c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(S.grid, 0, 0);
+        c.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+        c.lineCap = 'round'; c.lineJoin = 'round'; c.lineWidth = 4;
+        var arr = S.sheets[S.sheet];
+        for (var i = 0; i < arr.length; i++) drawStroke(c, arr[i], W, H);
+        if (S.drawing) drawStroke(c, S.drawing, W, H);
+        var now = performance.now(), keep = [];
+        for (var d = 0; d < S.dots.length; d++) {
+            var dt = S.dots[d], age = now - dt.t; if (age > 520) continue;
+            keep.push(dt);
+            var a = 1 - age / 520;
+            c.globalAlpha = a; c.fillStyle = '#000';
+            c.beginPath(); c.arc(dt.x * W, dt.y * H, 4 + 5 * a, 0, 6.2832); c.fill();
+        }
+        c.globalAlpha = 1; S.dots = keep;
+        c.fillStyle = '#000';
+        for (var q = 0; q < S.live.length; q++) { c.beginPath(); c.arc(S.live[q].x * W, S.live[q].y * H, 7, 0, 6.2832); c.fill(); }
+        var px = S.x * W;
+        c.strokeStyle = 'rgba(0,0,0,0.12)'; c.lineWidth = 8; c.beginPath(); c.moveTo(px, 0); c.lineTo(px, H); c.stroke();
+        c.strokeStyle = '#1a1a1a'; c.lineWidth = 2; c.beginPath(); c.moveTo(px, 0); c.lineTo(px, H); c.stroke();
+    }
+    function frame(t) {
+        S.raf = 0;
+        if (!S.active) return;
+        var dt = Math.min(t - (S.last || t), 100); S.last = t;
+        resize();
+        syncTonality();
+        if (S.playing && dt > 0) {
+            var px = S.x; advance(dt);
+            if (S.mode !== 'pts') { var cx = S.x; glissUpdate(S.wrap ? cx : Math.min(px, cx), S.wrap ? cx : Math.max(px, cx), cx); }
+            else if (S.live.length || S.tracks.length) releaseGliss(true);
+        } else if (!S.playing && (S.live.length || S.tracks.length)) releaseGliss(true);
+        draw();
+        S.raf = requestAnimationFrame(frame);
+    }
+    function start() { if (!S.raf) { S.last = 0; S.raf = requestAnimationFrame(frame); } }
+
+    /* ---------- UI ---------- */
+    var ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
+    var ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>';
+    function setPlayIcon() { var b = $('pcsPlay'); if (b) { b.innerHTML = S.playing ? ICON_PAUSE : ICON_PLAY; b.classList.toggle('pcs-on', !S.playing); } }
+    function mark(sel, attr, val) {
+        document.querySelectorAll(sel).forEach(function (b) { b.classList.toggle('pcs-on', b.getAttribute(attr) === String(val)); });
+    }
+    function syncUI() {
+        setPlayIcon();
+        $('pcsPen').classList.toggle('pcs-on', S.tool === 'pen');
+        $('pcsEraser').classList.toggle('pcs-on', S.tool === 'eraser');
+        $('pcsRoot').classList.toggle('pcs-erase', S.tool === 'eraser');
+        $('pcsBpm').textContent = S.bpm;
+        mark('#pcsRoot [data-act="dir"]', 'data-v', S.dir);
+        mark('#pcsRoot [data-act="sheet"]', 'data-v', S.sheet);
+        mark('#pcsRoot [data-act="speed"]', 'data-v', S.speed);
+        document.querySelectorAll('#pcsRoot [data-act="rmode"]').forEach(function (b) { b.classList.toggle('pcs-on', b.getAttribute('data-v') === S.mode); });
+        document.querySelectorAll('#pcsRow2 .pcs-dot').forEach(function (b) { b.classList.toggle('pcs-on', +b.getAttribute('data-d') === S.color); });
+    }
+    function buildColors() {
+        var t = ton(), row = $('pcsRow2'); row.innerHTML = '';
+        for (var d = 0; d < 7; d++) {
+            var pc = (t.T + t.scale[d]) % 12, b = document.createElement('button');
+            b.type = 'button'; b.className = 'pcs-dot'; b.setAttribute('data-d', d);
+            b.style.background = noteCss(pc); b.textContent = NAMES[pc];
+            b.setAttribute('aria-label', 'Color ' + NAMES[pc]);
+            row.appendChild(b);
+        }
+    }
+    function buildPiano() {
+        var t = ton(), inScale = {}; t.scale.forEach(function (s) { inScale[(t.T + s) % 12] = true; });
+        var WK = [0, 2, 4, 5, 7, 9, 11], BK = [[1, 0], [3, 1], [6, 3], [8, 4], [10, 5]];
+        var svg = '', kw = 20, i;
+        for (i = 0; i < 7; i++) {
+            var pc = WK[i], fill = inScale[pc] ? noteCss(pc) : '#dcdad2';
+            svg += '<rect class="pcs-wk" data-pc="' + pc + '" x="' + (i * kw) + '" y="0" width="' + kw + '" height="44" rx="3" fill="' + fill + '"/>';
+            if (pc === t.T) svg += '<circle cx="' + (i * kw + kw / 2) + '" cy="37" r="3.2" fill="#fff" stroke="#000" stroke-width="1" pointer-events="none"/>';
+        }
+        for (i = 0; i < 5; i++) {
+            var bpc = BK[i][0], bx = (BK[i][1] + 1) * kw - 6, bf = inScale[bpc] ? noteCss(bpc) : '#1d1d1d';
+            svg += '<rect class="pcs-bk" data-pc="' + bpc + '" x="' + bx + '" y="0" width="12" height="27" rx="2" fill="' + bf + '"/>';
+            if (bpc === t.T) svg += '<circle cx="' + (bx + 6) + '" cy="21" r="2.6" fill="#fff" stroke="#000" stroke-width="1" pointer-events="none"/>';
+        }
+        $('pcsPiano').innerHTML = svg;
+    }
+    function syncTonality() {
+        var t = ton(), key = t.T + '|' + t.minor;
+        if (key === S.tonKey) return;
+        S.tonKey = key; buildColors(); buildPiano();
+        $('pcsMode').textContent = t.minor ? 'm' : 'M';
+        syncUI();
+    }
+    function setTonic(pc) {   // pc = tónica visible (en menor, la tónica menor)
+        var t = ton();
+        try { changeTonic(t.minor ? (pc + 3) % 12 : pc); } catch (e) {}
+    }
+    function toggleMode() {
+        var t = ton();
+        try {
+            if (t.minor) { changeTonic(t.T); changeScaleMode('major'); }
+            else { changeTonic((t.T + 3) % 12); changeScaleMode('relative_minor'); }
+        } catch (e) {}
+    }
+    function onAct(act, v) {
+        resumeAudio();
+        if (act === 'play') { S.playing = !S.playing; if (!S.playing) releaseAll(); }
+        else if (act === 'pen') S.tool = 'pen';
+        else if (act === 'eraser') S.tool = 'eraser';
+        else if (act === 'undo') undo();
+        else if (act === 'bpm-') S.bpm = clamp(S.bpm - 5, 30, 240);
+        else if (act === 'bpm+') S.bpm = clamp(S.bpm + 5, 30, 240);
+        else if (act === 'mode') toggleMode();
+        else if (act === 'dir') { S.dir = v; S.sgn = v === 'rl' ? -1 : 1; }
+        else if (act === 'sheet') { S.sheet = +v; S.dots = []; releaseAll(); }
+        else if (act === 'speed') S.speed = +v;
+        else if (act === 'rmode') { S.mode = v; releaseGliss(true); try { showNotification(v === 'gliss' ? 'GLISSANDO: SIGUE LA LÍNEA' : v === 'both' ? 'PUNTOS + GLISSANDO' : 'PUNTOS: UNA NOTA POR CRUCE'); } catch (e) {} }
+        save(); syncUI();
+    }
+    function bind() {
+        var root = $('pcsRoot'); if (!root || root._pcs) return; root._pcs = true;
+        root.addEventListener('click', function (e) {
+            var dot = e.target.closest('.pcs-dot');
+            if (dot) { S.color = +dot.getAttribute('data-d'); save(); syncUI(); return; }
+            var b = e.target.closest('[data-act]'); if (b) onAct(b.getAttribute('data-act'), b.getAttribute('data-v'));
+        });
+        $('pcsPiano').addEventListener('pointerdown', function (e) {
+            var k = e.target.closest('[data-pc]'); if (!k) return;
+            e.preventDefault(); resumeAudio(); setTonic(+k.getAttribute('data-pc'));
+        });
+        var cv = $('pcsCanvas');
+        cv.addEventListener('pointerdown', function (e) {
+            if (e.button > 0 && e.pointerType === 'mouse') return;
+            e.preventDefault(); resumeAudio();
+            try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+            if (S.tool === 'pen') startStroke(e); else { S.erasing = { items: [] }; eraseAt(e); }
+        });
+        cv.addEventListener('pointermove', function (e) {
+            if (S.drawing) moveStroke(e); else if (S.erasing) eraseAt(e);
+        });
+        var up = function (e) {
+            try { cv.releasePointerCapture(e.pointerId); } catch (x) {}
+            if (S.drawing) endStroke(); if (S.erasing) endErase();
+        };
+        cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+        cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        if (window.ResizeObserver) new ResizeObserver(function () { if (S.active) resize(); }).observe($('pcsPaper'));
+        window.addEventListener('resize', function () { if (S.active) resize(); });
+    }
+
+    /* ---------- API ---------- */
+    function onSection(section) {
+        if (section === 'pintar') {
+            S.active = true; S.tonKey = '';
+            bind();
+            setTimeout(function () { if (!S.active) return; S.grid = null; resize(); syncTonality(); syncUI(); start(); }, 0);
+        } else stop();
+    }
+    function stop() { S.active = false; S.drawing = null; S.erasing = null; releaseAll(); }
+    function pickPc(pc) {                // una nota tocada (teclado/MIDI) elige su color si pertenece a la escala
+        var t = ton();
+        for (var d = 0; d < 7; d++) if ((t.T + t.scale[d]) % 12 === pc) { S.color = d; save(); if (S.active) syncUI(); return; }
+    }
+    load();
+    window.pcs = {
+        onSection: onSection, stop: stop, undo: function () { undo(); }, clearSheet: clearSheet, pickPc: pickPc,
+        get own() { return S.own; }, _state: S
+    };
+})();
+</script>
+
 </body>
 </html>
