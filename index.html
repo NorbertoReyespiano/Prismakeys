@@ -509,6 +509,43 @@
         /* .mic-status-readout: la nota detectada en vivo (o "— sin señal —"/"— silencio —", ver
            updateMicStatusReadout() en el script) -- texto chico y monoespaciado, mismo estilo que
            el resto de indicadores de esta cabecera, para que no compita visualmente con el botón. */
+        #dd-subdiv { display: none; }
+        #cat-clave { display: none; }
+        body[data-section="aprendizaje"] #cat-clave { display: block; }
+        body[data-section="aprendizaje"] #dd-subdiv { display: flex; }
+        #compoundWin { width: min(94vw, 360px); }
+        .cmp-body { padding: 8px 10px 12px; font-size: 12px; line-height: 1.45; color: #ddd; }
+        .cmp-p { margin: 4px 0 8px; }
+        .cmp-h { margin: 12px 0 6px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; color: #7fd1ff; }
+        .cmp-tab { border-collapse: collapse; width: 100%; margin: 4px 0 4px; }
+        .cmp-tab th, .cmp-tab td { border: 1px solid #333; padding: 3px 6px; text-align: center; }
+        .cmp-tab th { background: #151515; color: #7fd1ff; font-weight: bold; }
+        .cmp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+        .cmp-cell { border: 1px solid #2a2a2a; border-radius: 6px; padding: 4px 4px 6px; background: #101014; text-align: center; }
+        .cmp-cell svg { max-width: 100%; height: auto; }
+        .cmp-count { font-size: 11px; color: #ffd24a; letter-spacing: 1px; }
+        .cmp-name { font-size: 10px; color: #aaa; line-height: 1.3; }
+        .cmp-ul { margin: 4px 0 0 16px; padding: 0; }
+        .cmp-ul li { margin: 3px 0; }
+        #dd-tesitura { display: none; }
+        body[data-section="microfono"] #dd-tesitura { display: flex; }
+        /* Ventana flotante de la escalera de sonidos (reusa .info-win, ver chooseTesitura()/tesituraBuildWin()). */
+        #tesituraWin { width: min(94vw, 300px); }
+        .tes-body { padding: 8px 8px 10px; }
+        .tes-info { font-size: 11px; line-height: 1.4; color: #ddd; margin-bottom: 8px; }
+        .tes-info b { color: #ffd24a; }
+        .tes-stairs { display: flex; flex-direction: column; gap: 2px; }
+        .tes-step { display: flex; align-items: baseline; justify-content: center; gap: 6px; height: 22px; line-height: 22px; border-radius: 3px 0 0 3px; font-size: 13px; letter-spacing: 1px; white-space: nowrap; overflow: hidden; transition: filter .08s, box-shadow .08s; }
+        .tes-step small { font-size: 9px; opacity: .7; letter-spacing: 0; }
+        .tes-step.comfy { box-shadow: inset 5px 0 0 #ffd24a; }
+        .tes-step.on { filter: brightness(1.7) saturate(1.2); outline: 2px solid #fff; outline-offset: -2px; }
+        .mic-voices { display: flex; align-items: center; gap: 4px; margin: 2px 0; }
+        .mic-voices-lbl { font-size: 10px; letter-spacing: 1px; color: var(--accent); font-family: 'Courier New', monospace; }
+        .mic-voices button {
+            min-width: 30px; height: 28px; min-height: 0; padding: 0 6px; font-size: 12px; line-height: 1; font-weight: bold; cursor: pointer;
+            background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px;
+        }
+        .mic-voices button.on { background: var(--accent); color: #000; }
         .mic-status-readout {
             font-size: 11px; font-family: 'Courier New', monospace; color: var(--accent);
             letter-spacing: 1px; min-height: 14px; text-align: center;
@@ -2701,6 +2738,10 @@
         .mic-tuner #tnNeedle { transition: opacity 0.2s ease; }
 
         /* ---------- PARTITURA: editor de partituras (botón PARTITURA de la barra, solo en Aprendizaje Musical) ---------- */
+        /* #dd-playback mudado a la barra (ver placePlaybackControls()): fila compacta a la derecha de PARTITURA. */
+        .compact-bar #dd-playback { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 4px; }
+        .compact-bar #dd-playback .playback-btn { padding: 0 8px; font-size: 13px; min-width: 34px; }
+        .compact-bar #dd-playback .playback-btn:disabled { opacity: 0.35; cursor: default; }
         .cb-score { display: none; border-color: #ffd54a; color: #ffd54a; }
         body[data-section="aprendizaje"] .cb-score { display: inline-block; }
         .compact-bar .cb-score:active, .compact-bar .cb-score.on { background: #ffd54a; color: #000; }
@@ -3357,9 +3398,33 @@
          vivo la nota detectada (#micStatusReadout). No es un dropdown como el resto de .control-box
          de esta fila -- no hace falta ningún submenú, solo un botón de un paso y un indicador de
          texto, mismo criterio que #undoBtn de arriba. -->
-    <div class="control-box mic-control-box" id="dd-mic" aria-label="Entrada por micrófono: detecta una nota a la vez y la toca como si fuera una tecla del piano">
+    <div class="control-box mic-control-box" id="dd-mic" aria-label="Entrada por micrófono: detecta de una a cuatro notas a la vez y las toca como teclas del piano">
         <button type="button" id="micToggleBtn" class="select-tonic" onclick="toggleMicInput()" aria-label="Activar o desactivar el micrófono">ACTIVAR MICRÓFONO</button>
+        <!-- VOCES 1/2/3/4: cuántas alturas simultáneas busca el detector (1 = el detector monofónico de siempre; 2 y 3 = análisis
+             espectral polifónico, ver micPolyAnalyze()). Se recuerda entre sesiones (mic_voices_v1). -->
+        <div class="mic-voices" id="micVoices" role="group" aria-label="Cantidad de voces simultáneas">
+            <span class="mic-voices-lbl">VOCES</span>
+            <button type="button" data-v="1" onclick="micSetVoices(1)" aria-label="Una voz (monofónico)">1</button>
+            <button type="button" data-v="2" onclick="micSetVoices(2)" aria-label="Dos voces">2</button>
+            <button type="button" data-v="3" onclick="micSetVoices(3)" aria-label="Tres voces">3</button>
+            <button type="button" data-v="4" onclick="micSetVoices(4)" aria-label="Cuatro voces">4</button>
+        </div>
         <span id="micStatusReadout" class="mic-status-readout" aria-live="polite">— sin señal —</span>
+    </div>
+    <!-- "TESITURA DE VOZ" (#dd-tesitura): solo en "TOCAR CON MICRÓFONO" (a pedido del usuario, con su tabla de tesituras). Elegir una voz
+         activa SOLA "Actuación > Escalera de colores > Modo de bloqueo > Selección por Lienzo" y abre una ventana flotante con la
+         escalera de sonidos de esa tesitura (nombre de nota y número de altura; la zona cómoda va marcada). Ver chooseTesitura(). -->
+    <div class="control-box dropdown" id="dd-tesitura">
+        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-tesitura')" aria-haspopup="listbox" aria-expanded="false" aria-label="Tesitura de voz: soprano, mezzosoprano, contralto, tenor, barítono o bajo">TESITURA DE VOZ</button>
+        <ul class="dropdown-menu" id="sub-tesitura" role="listbox" aria-label="Tesitura de voz">
+            <li role="option" data-value="soprano" onclick="chooseTesitura('soprano', event)">Soprano</li>
+            <li role="option" data-value="mezzosoprano" onclick="chooseTesitura('mezzosoprano', event)">Mezzosoprano</li>
+            <li role="option" data-value="contralto" onclick="chooseTesitura('contralto', event)">Contralto</li>
+            <li role="option" data-value="tenor" onclick="chooseTesitura('tenor', event)">Tenor</li>
+            <li role="option" data-value="baritono" onclick="chooseTesitura('baritono', event)">Barítono</li>
+            <li role="option" data-value="bajo" onclick="chooseTesitura('bajo', event)">Bajo</li>
+            <li role="option" data-value="ninguna" class="active" onclick="chooseTesitura('ninguna', event)">Ninguna (ocultar escalera)</li>
+        </ul>
     </div>
 
     <div class="control-box dropdown" id="dd-tonic">
@@ -3521,6 +3586,21 @@
              <style>. El texto/aria-label de acá abajo son solo el valor inicial/de respaldo. -->
         <button type="button" id="writingBtn" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-writing')" aria-haspopup="true" aria-expanded="false" aria-label="Aprendizaje musical: escritura musical">APRENDIZAJE MUSICAL</button>
         <ul class="dropdown-menu" id="dd-learning" role="menu" aria-label="Categorías de aprendizaje musical">
+            <!-- "Clave Musical" (a pedido del usuario, primera categoría de PARTITURA): elige la clave del pentagrama. El pentagrama doble de
+                 piano (Sol + Fa en 4ª) es el de siempre; cada una de las 7 claves REEMPLAZA los dos pentagramas por UNO con esa clave
+                 (ver CLEF_SPECS/setStaffClefMode() en el script). -->
+            <li id="cat-clave" class="dropdown-category" role="menuitem" aria-haspopup="true" onclick="toggleCategorySubmenu(this, event)">Clave Musical
+                <ul class="dropdown-menu dropdown-submenu" id="sub-clave" role="listbox" aria-label="Clave musical del pentagrama">
+                    <li role="option" data-value="grand" class="active" onclick="chooseStaffClef('grand', event)">Pentagrama doble de piano (Sol + Fa)</li>
+                    <li role="option" data-value="treble" onclick="chooseStaffClef('treble', event)">1. Clave de Sol</li>
+                    <li role="option" data-value="bass4" onclick="chooseStaffClef('bass4', event)">2. Clave de Fa en 4ª línea</li>
+                    <li role="option" data-value="bass3" onclick="chooseStaffClef('bass3', event)">3. Clave de Fa en 3ª línea</li>
+                    <li role="option" data-value="do1" onclick="chooseStaffClef('do1', event)">4. Clave de Do en 1ª línea</li>
+                    <li role="option" data-value="do2" onclick="chooseStaffClef('do2', event)">5. Clave de Do en 2ª línea</li>
+                    <li role="option" data-value="do3" onclick="chooseStaffClef('do3', event)">6. Clave de Do en 3ª línea</li>
+                    <li role="option" data-value="do4" onclick="chooseStaffClef('do4', event)">7. Clave de Do en 4ª línea</li>
+                </ul>
+            </li>
             <!-- id="cat-escritura" (nuevo): "MENÚ PROPIO POR SECCIÓN" (ver <style>) la oculta dentro
                  de la sección APRENDIZAJE MUSICAL -- ahí la sección entera arranca directamente con
                  el pentagrama activo (setVisualMode(1) en enterPrismaKeys(), ver el script), así que
@@ -3672,6 +3752,18 @@
                  EXPLÍCITO del usuario se quitó de acá del todo (ver el comentario grande de
                  #dd-writing más arriba): ahora se entra directo desde el botón propio de la
                  pantalla de inicio (#homeScreen, ver openDualSynthFromHome() en el script). -->
+        </ul>
+    </div>
+
+    <!-- "SUBDIVISIÓN DEL PULSO" (#dd-subdiv): solo en APRENDIZAJE MUSICAL (a pedido del usuario). Simples = el pulso es la negra y se divide
+         en 2 (comportamiento de siempre); Compuestos = el pulso es la negra con puntillo y se divide en 3 (6/8, 9/8, 12/8, con sus
+         figuras, silencios, barras por pulso y dosillo). Ver setSubdivisionMode(). El tercer ítem abre el panel de figuras. -->
+    <div class="control-box dropdown" id="dd-subdiv">
+        <button type="button" class="select-tonic dropdown-toggle" onclick="toggleDropdown('dd-subdiv')" aria-haspopup="listbox" aria-expanded="false" aria-label="Subdivisión del pulso: simples o compuestos">SUBDIVISIÓN DEL PULSO</button>
+        <ul class="dropdown-menu" id="sub-subdiv" role="listbox" aria-label="Subdivisión del pulso">
+            <li role="option" data-value="simple" class="active" onclick="chooseSubdivision('simple', event)">Simples (el pulso se divide en 2)</li>
+            <li role="option" data-value="compound" onclick="chooseSubdivision('compound', event)">Compuestos (el pulso se divide en 3)</li>
+            <li role="menuitem" onclick="event.stopPropagation(); openCompoundFiguresPanel(); closeAllDropdowns();">Ver figuras del compás compuesto</li>
         </ul>
     </div>
 
@@ -6477,12 +6569,8 @@
         const CLEF_LEFT_PAD = 12; // mismo valor que el x de fillText en drawGrandStaff
         const CLEF_KEYSIG_GAP = 6; // mismo valor que en drawGrandStaff, entre clave y armadura
         const CLEF_BREATHING_ROOM = 14; // aire extra entre el borde del glifo (o la armadura) y la primera nota
-        wCtx.save();
-        wCtx.font = `${(layout.spacing * 4.6).toFixed(1)}px serif`;
-        const trebleWidth = wCtx.measureText('\u{1D11E}').width;
-        wCtx.font = `${(layout.spacing * 3.2).toFixed(1)}px serif`;
-        const bassWidth = wCtx.measureText('\u{1D122}').width;
-        wCtx.restore();
+        const trebleWidth = clefGlyphWidth(wCtx, 'treble', layout);
+        const bassWidth = staffClefMode === 'grand' ? clefGlyphWidth(wCtx, 'bass', layout) : 0;
         // La armadura (si la tónica activa lleva sostenidos o bemoles) necesita su propio ancho
         // reservado además del glifo de clave -- ver getKeySigLayout, que usa exactamente la misma
         // geometría que drawKeySignatureForClef para que este margen nunca quede corto ni de más.
@@ -6533,8 +6621,22 @@
     // pulsos) -- eso es lo que hace posible saber con certeza dónde faltó sonido (para escribir
     // silencios) y qué notas caen dentro del mismo pulso (para agruparlas con una barra de unión
     // compartida en vez de corchetes individuales).
-    const GRID_UNIT = 0.25;
-    function quantizeBeats(beats) { return Math.round(beats / GRID_UNIT) * GRID_UNIT; }
+    //
+    // SUBDIVISIÓN DEL PULSO (AJUSTES > "Subdivisión del pulso", solo APRENDIZAJE MUSICAL):
+    //   'simple'    -> el pulso es la NEGRA y se divide en 2 (binario): rejilla de 1/4 de pulso (semicorchea).
+    //   'compound'  -> el pulso es la NEGRA CON PUNTILLO y se divide en 3 (ternario): rejilla de 1/6 de
+    //                  pulso (semicorchea = 1/6, corchea = 1/3, negra = 2/3, negra con puntillo = 1 pulso).
+    // En ambos casos "beat" sigue siendo UN PULSO del metrónomo (currentBPM = pulsos por minuto), así que
+    // todo el motor de escritura (rejilla, barras, silencios, compás) sigue contando en pulsos; lo único
+    // que cambia es cuánto vale la unidad mínima (GRID_UNIT) y la tabla de figuras. UNITS_PER_BEAT es
+    // cuántas unidades mínimas caben en un pulso (4 ó 6).
+    let subdivisionMode = 'simple';
+    let UNITS_PER_BEAT = 4;
+    let GRID_UNIT = 0.25;
+    function quantizeBeats(beats) { return Math.round(beats * UNITS_PER_BEAT) / UNITS_PER_BEAT; }
+    // Índice de pulso al que pertenece una posición en pulsos (con un mínimo de tolerancia de punto
+    // flotante para que 0.99999999 cuente como el pulso 1 y no como el 0).
+    function beatBin(b) { return Math.floor(b + 1e-6); }
     // GAP_TOLERANCE: cuánto se perdona de "hueco" antes de considerarlo un silencio real. La
     // interpretación humana nunca cae exactamente sobre la rejilla -- sin esto, dos corcheas
     // tocadas una detrás de la otra (con la imprecisión normal de tocar, sin metrónomo perfecto)
@@ -6601,13 +6703,23 @@
 
     // Silencios estándar, en el mismo espíritu que RHYTHMIC_FIGURES pero sin cabeza/plica --
     // glifos musicales Unicode reales (silencio de redonda/blanca/negra/corchea/semicorchea).
-    const REST_FIGURES = [
+    const SIMPLE_REST_FIGURES = [
         { key: 'semicorchea', label: 'SILENCIO DE SEMICORCHEA', beats: 0.25, glyph: '\u{1D13F}' },
         { key: 'corchea',     label: 'SILENCIO DE CORCHEA',     beats: 0.5,  glyph: '\u{1D13E}' },
         { key: 'negra',       label: 'SILENCIO DE NEGRA',       beats: 1,    glyph: '\u{1D13D}' },
         { key: 'blanca',      label: 'SILENCIO DE BLANCA',      beats: 2,    glyph: '\u{1D13C}' },
         { key: 'redonda',     label: 'SILENCIO DE REDONDA',     beats: 4,    glyph: '\u{1D13B}' }
     ];
+    // Compás compuesto: el pulso es la negra con puntillo, así que la negra vale 2/3 de pulso, etc.
+    // (el silencio de "pulso entero" es un silencio de negra CON PUNTILLO: ver entry.dotted en emitCompoundRests()).
+    const COMPOUND_REST_FIGURES = [
+        { key: 'semicorchea', label: 'SILENCIO DE SEMICORCHEA', beats: 1 / 6, glyph: '\u{1D13F}' },
+        { key: 'corchea',     label: 'SILENCIO DE CORCHEA',     beats: 1 / 3, glyph: '\u{1D13E}' },
+        { key: 'negra',       label: 'SILENCIO DE NEGRA',       beats: 2 / 3, glyph: '\u{1D13D}' },
+        { key: 'blanca',      label: 'SILENCIO DE BLANCA',      beats: 4 / 3, glyph: '\u{1D13C}' },
+        { key: 'redonda',     label: 'SILENCIO DE REDONDA',     beats: 8 / 3, glyph: '\u{1D13B}' }
+    ];
+    let REST_FIGURES = SIMPLE_REST_FIGURES;
     function restFigureFor(beats) {
         return REST_FIGURES.find(f => f.beats === beats) || REST_FIGURES[0];
     }
@@ -6616,7 +6728,64 @@
     // (redonda→semicorchea) tomando siempre el que más quepa entero -- así un pulso completo de
     // silencio se escribe como UN silencio de negra en vez de 4 de semicorchea, y solo se
     // fragmenta en piezas más chicas lo que realmente hace falta para llenar el resto exacto.
+    // ---- COMPÁS COMPUESTO: descomposición de un tramo en figuras (con puntillo) que respetan los pulsos ----
+    // Todo se calcula en UNIDADES (1 unidad = una semicorchea = 1/6 de pulso; el pulso son 6 unidades).
+    // Cada pieza es { startU, u, key, dot }: u = duración en unidades; key = figura base (corchea, negra...);
+    // dot = true si es la figura CON PUNTILLO (3u = corchea con puntillo, 6u = negra con puntillo = 1 pulso,
+    // 12u = blanca con puntillo = 2 pulsos, 24u = redonda con puntillo = 4 pulsos).
+    const COMPOUND_PIECE_TABLE = [
+        { u: 24, key: 'redonda',     dot: true  },
+        { u: 16, key: 'redonda',     dot: false },
+        { u: 12, key: 'blanca',      dot: true  },
+        { u: 8,  key: 'blanca',      dot: false },
+        { u: 6,  key: 'negra',       dot: true  },
+        { u: 4,  key: 'negra',       dot: false },
+        { u: 3,  key: 'corchea',     dot: true  },
+        { u: 2,  key: 'corchea',     dot: false },
+        { u: 1,  key: 'semicorchea', dot: false }
+    ];
+    // Regla de teoría para compases compuestos: una figura NO debe cruzar el límite entre dos pulsos,
+    // salvo que sea un múltiplo exacto de pulsos y empiece justo en un pulso (negra con puntillo = 1 pulso,
+    // blanca con puntillo = 2 pulsos empezando en pulso par dentro del compás, redonda con puntillo = 4
+    // pulsos = compás de 12/8 entero). Lo demás (p. ej. una negra que empieza en la última corchea de un
+    // pulso) se parte en dos figuras unidas por ligadura, como se enseña en solfeo rítmico.
+    function compoundPiecePlacementOk(startU, u) {
+        const p = startU % 6;
+        const inBar = Math.floor(startU / 6) % currentCompas;
+        if (u < 6) return p + u <= 6;
+        if (p !== 0) return false;
+        if (u === 6) return true;
+        if (u === 12) return inBar % 2 === 0 && inBar + 2 <= currentCompas;
+        if (u === 24) return inBar === 0 && currentCompas === 4;
+        return false; // 8 (blanca) y 16 (redonda) cruzan pulsos: se escriben ligando figuras
+    }
+    function compoundPieces(startU, totalU, ignoreEnabled) {
+        const out = [];
+        let cur = startU, rem = totalU, guard = 0;
+        while (rem > 0 && guard++ < 256) {
+            let found = null;
+            for (const c of COMPOUND_PIECE_TABLE) {
+                if (c.u <= rem && (ignoreEnabled || enabledRhythmicFigures.has(c.key)) && compoundPiecePlacementOk(cur, c.u)) { found = c; break; }
+            }
+            if (!found) break; // lo que queda no se puede armar con las figuras habilitadas: se corta ahí
+            out.push({ startU: cur, u: found.u, key: found.key, dot: found.dot });
+            cur += found.u; rem -= found.u;
+        }
+        return out;
+    }
+    function emitCompoundRests(clef, fromBeat, toBeat) {
+        const startU = Math.round(fromBeat * UNITS_PER_BEAT);
+        const endU = Math.round(toBeat * UNITS_PER_BEAT);
+        if (endU <= startU) return;
+        compoundPieces(startU, endU - startU).forEach(pc => {
+            const fig = REST_FIGURES.find(f => f.key === pc.key);
+            const b = pc.startU / UNITS_PER_BEAT;
+            notesOnCanvas.push({ clef, x: beatsToX(b), beat: b, figure: fig, dotted: pc.dot || undefined, notes: [], isRest: true });
+        });
+    }
+
     function emitRests(clef, fromBeat, toBeat) {
+        if (subdivisionMode === 'compound') { emitCompoundRests(clef, fromBeat, toBeat); return; }
         // Mismas figuras habilitadas en "Figuras Rítmicas" (ver enabledRhythmicFigures/
         // activeRhythmicFigures() junto a RHYTHMIC_FIGURES) que usa classifyRhythmicFigure() para
         // las notas -- así el silencio respeta la misma restricción que el maestro haya elegido
@@ -6681,6 +6850,7 @@
     // exportador directamente la partía en figura+SILENCIO en vez de dejarla como una sola figura
     // punteada en el archivo final.
     function entryDurationBeats(entry) {
+        if (entry.durBeats != null) return entry.durBeats; // figura de grupo irregular (tresillo, seisillo, dosillo): su duración REAL, distinta del valor escrito
         if (entry.tiedFigures) return entry.tiedFigures.reduce((sum, f) => sum + f.beats, 0);
         if (!entry.figure) return 0;
         return entry.dotted ? entry.figure.beats * 1.5 : entry.figure.beats;
@@ -6701,13 +6871,32 @@
     // proporción, no resta lineal) para hallar la figura más cercana a una duración en pulsos --
     // así 0.6 pulsos cae en "corchea" (0.5) y no se arrastra hacia "negra" (1) solo por estar más
     // cerca en términos absolutos.
-    const RHYTHMIC_FIGURES = [
+    const SIMPLE_RHYTHMIC_FIGURES = [
         { key: 'semicorchea', label: 'SEMICORCHEA', beats: 0.25, hollow: false, stem: true, flags: 2 },
         { key: 'corchea',     label: 'CORCHEA',     beats: 0.5,  hollow: false, stem: true, flags: 1 },
         { key: 'negra',       label: 'NEGRA',       beats: 1,    hollow: false, stem: true, flags: 0 },
         { key: 'blanca',      label: 'BLANCA',      beats: 2,    hollow: true,  stem: true, flags: 0 },
         { key: 'redonda',     label: 'REDONDA',     beats: 4,    hollow: true,  stem: false, flags: 0 }
     ];
+    // Compás compuesto (pulso = negra con puntillo): mismas figuras, pero cada una vale 2/3 de lo que vale
+    // en un compás simple medido en pulsos. Las versiones CON PUNTILLO (corchea., negra., blanca., redonda.)
+    // no están acá: se arman al escribir (entry.dotted / dottedFigure()).
+    const COMPOUND_RHYTHMIC_FIGURES = [
+        { key: 'semicorchea', label: 'SEMICORCHEA', beats: 1 / 6, hollow: false, stem: true, flags: 2 },
+        { key: 'corchea',     label: 'CORCHEA',     beats: 1 / 3, hollow: false, stem: true, flags: 1 },
+        { key: 'negra',       label: 'NEGRA',       beats: 2 / 3, hollow: false, stem: true, flags: 0 },
+        { key: 'blanca',      label: 'BLANCA',      beats: 4 / 3, hollow: true,  stem: true, flags: 0 },
+        { key: 'redonda',     label: 'REDONDA',     beats: 8 / 3, hollow: true,  stem: false, flags: 0 }
+    ];
+    let RHYTHMIC_FIGURES = SIMPLE_RHYTHMIC_FIGURES;
+    // Figura "con puntillo" como objeto propio (para las listas de figuras ligadas, tiedFigures): mismo
+    // aspecto que la base, duración x1.5 y marca dotted=true para que el dibujo agregue el punto.
+    const dottedFigureCache = new Map();
+    function dottedFigure(base) {
+        let d = dottedFigureCache.get(base);
+        if (!d) { d = Object.assign({}, base, { beats: base.beats * 1.5, dotted: true }); dottedFigureCache.set(base, d); }
+        return d;
+    }
 
     // "Figuras Rítmicas" (categoría nueva de APRENDIZAJE MUSICAL, ver HTML #sub-figuras): qué
     // figuras puede llegar a escribir ESCRITURA MUSICAL al clasificar una nota o un silencio (ver
@@ -6857,22 +7046,30 @@
     // ancho. Las tres tolerancias de abajo quedan en un valor mínimo (1e-6) solo como salvaguarda
     // de punto flotante para la propia rejilla ya cuantizada, no como el mecanismo que perdona el
     // margen de máquina (ese trabajo ahora lo hace snapToGrid).
+    // Las tolerancias se guardan como MÚLTIPLOS de GRID_UNIT (gapU/artU/underU) y se convierten a pulsos con
+    // applyRhythmTolerances(): así el mismo nivel vale tanto en compás simple (rejilla de 1/4 de pulso) como en
+    // compuesto (rejilla de 1/6). roundBias: cuánto se redondea "hacia arriba" (en unidades) una duración al
+    // clasificarla en compás compuesto (ver compoundUnitsFor()).
     const RHYTHM_PRECISION_LEVELS = {
-        principiante: { gap: GRID_UNIT, articulation: GRID_UNIT / 2, undershoot: GRID_UNIT * 3, label: 'PRINCIPIANTE' },      // 0.25 / 0.125 / 0.75 -- valores originales, sin cambios
-        intermedio:   { gap: GRID_UNIT / 2, articulation: GRID_UNIT / 4, undershoot: GRID_UNIT * 1.5, label: 'INTERMEDIO' },  // 0.125 / 0.0625 / 0.375
-        avanzado:     { gap: GRID_UNIT / 4, articulation: GRID_UNIT / 8, undershoot: GRID_UNIT / 2, label: 'AVANZADO' },      // 0.0625 / 0.03125 / 0.125
-        sibelius:     { gap: 1e-6, articulation: 1e-6, undershoot: 1e-6, snapToGrid: true, label: 'USO DE SIBELIUS' }        // margen mínimo (solo de punto flotante) + redondeo forzado a la rejilla de semicorchea
+        principiante: { gapU: 1,      artU: 0.5,    underU: 3,      roundBias: 0.25, label: 'PRINCIPIANTE' },      // 0.25 / 0.125 / 0.75 pulso en compás simple -- valores originales, sin cambios
+        intermedio:   { gapU: 0.5,    artU: 0.25,   underU: 1.5,    roundBias: 0.15, label: 'INTERMEDIO' },        // 0.125 / 0.0625 / 0.375
+        avanzado:     { gapU: 0.25,   artU: 0.125,  underU: 0.5,    roundBias: 0.05, label: 'AVANZADO' },          // 0.0625 / 0.03125 / 0.125
+        sibelius:     { gapU: 4e-6,   artU: 4e-6,   underU: 4e-6,   roundBias: 0,    snapToGrid: true, label: 'USO DE SIBELIUS' }  // margen mínimo (solo de punto flotante) + redondeo forzado a la rejilla
     };
     // Nivel activo por defecto: 'principiante' -- preserva el comportamiento de siempre para
     // cualquiera que no haya tocado este menú nuevo todavía.
     let rhythmPrecisionLevel = 'principiante';
+    function applyRhythmTolerances() {
+        const level = RHYTHM_PRECISION_LEVELS[rhythmPrecisionLevel];
+        GAP_TOLERANCE = level.gapU * GRID_UNIT;
+        ARTICULATION_GAP_TOLERANCE = level.artU * GRID_UNIT;
+        RHYTHM_UNDERSHOOT_TOLERANCE = level.underU * GRID_UNIT;
+    }
     function setRhythmPrecisionLevel(value) {
         const level = RHYTHM_PRECISION_LEVELS[value];
         if (!level) return;
         rhythmPrecisionLevel = value;
-        GAP_TOLERANCE = level.gap;
-        ARTICULATION_GAP_TOLERANCE = level.articulation;
-        RHYTHM_UNDERSHOOT_TOLERANCE = level.undershoot;
+        applyRhythmTolerances();
         markActiveDropdownOption('sub-precision', value);
         showNotification(`PRECISIÓN RÍTMICA: ${level.label}`);
     }
@@ -6985,6 +7182,14 @@
         // pentagrama para él (a pedido del usuario, en vez de disfrazarlo con la figura más
         // cercana). Un arreglo de 2+ figuras significa que hace falta más de un símbolo, unidos
         // por una ligadura (ver entry.tiedFigures / drawChordFigure()).
+        if (subdivisionMode === 'compound') { closePendingCompound(clef, pending, duration, nextOnsetBeatRaw); return; }
+        // Notas que parecen de tresillo/seisillo (intervalo de 1/6, 1/3 o 2/3 de pulso sobre una posición de tercios):
+        // se toman LEGATO (duración = intervalo hasta la siguiente), igual que cualquier nota normal que llena su hueco.
+        // Sin esto, tocar el tresillo "picado" las descartaba o las llenaba de silencios antes de poder reconocer el grupo
+        // (ver resolveTuplets()).
+        if (nextOnsetBeatRaw !== null && pending.rawBeat != null && simpleTupletCandidate(pending.rawBeat, nextOnsetBeatRaw - pending.rawBeat)) {
+            duration = Math.max(duration, nextOnsetBeatRaw - pending.rawBeat);
+        }
         const figures = classifyRhythmicFigureSequence(duration);
         if (!figures) {
             // No completa ni la figura habilitada más chica: no se escribe nada en notesOnCanvas
@@ -7039,15 +7244,132 @@
         // necesita ligadura (ver dotted arriba); dotted solo lo lee el dibujo (drawChordFigure()) y
         // el agrupado por barras de unión (renderSequencerNotation(), que igual que con tiedFigures
         // deja afuera de cualquier grupo con barra a una entrada con punto de aumentación).
-        notesOnCanvas.push({
+        const newEntry = {
             clef, x: pending.x, beat: pending.qStart, figure: figures[0],
             tiedFigures: (!dotted && figures.length > 1) ? figures : undefined,
             dotted: dotted || undefined,
             notes: pending.members, isRest: false, startTime: pending.rawStart,
-            holdSeconds: pending.holdSeconds, groupId: pending.groupId
-        });
+            holdSeconds: pending.holdSeconds, groupId: pending.groupId,
+            rawBeat: pending.rawBeat, rawInt: (nextOnsetBeatRaw !== null && pending.rawBeat != null) ? nextOnsetBeatRaw - pending.rawBeat : null,
+            holdBeats: pending.holdDurationBeats
+        };
+        notesOnCanvas.push(newEntry);
         voiceTimelineEnd[clef] = Math.max(voiceTimelineEnd[clef], qEnd);
         pendingClefEntry[clef] = null;
+        resolveTuplets(clef, newEntry); // tresillo / seisillo (compás simple)
+    }
+
+    // --- COMPÁS COMPUESTO: cierre de una nota pendiente ------------------------------------------
+    // Cuántas unidades (semicorcheas = 1/6 de pulso) dura una nota: se redondea a la unidad más cercana, con un
+    // pequeño sesgo "hacia arriba" según el nivel de precisión (perdona soltar la tecla un poco antes), muy
+    // lejos del margen enorme de classifyRhythmicFigureSequence() -- ahí un pulso entero (negra con puntillo)
+    // se "perdonaba" hasta una blanca, algo inaceptable cuando la negra con puntillo ES el pulso.
+    function compoundUnitsFor(durationBeats) {
+        const level = RHYTHM_PRECISION_LEVELS[rhythmPrecisionLevel] || RHYTHM_PRECISION_LEVELS.principiante;
+        return Math.floor(Math.max(0, durationBeats) * UNITS_PER_BEAT + 0.5 + (level.roundBias || 0));
+    }
+    function closePendingCompound(clef, pending, duration, nextOnsetBeatRaw) {
+        const u = compoundUnitsFor(duration);
+        const startU = Math.round(pending.qStart * UNITS_PER_BEAT);
+        const pieces = (u > 0 && duration >= 0.05) ? compoundPieces(startU, u) : [];
+        if (pieces.length === 0) {
+            // No se puede escribir nada con las figuras habilitadas (o fue un roce): se descarta el ataque, pero el
+            // tramo queda "cubierto" para no inventar un silencio encima (mismo criterio que en compás simple).
+            voiceTimelineEnd[clef] = Math.max(voiceTimelineEnd[clef], (startU + Math.max(0, u)) / UNITS_PER_BEAT);
+            pendingClefEntry[clef] = null;
+            return;
+        }
+        const placedU = pieces.reduce((sum, pc) => sum + pc.u, 0);
+        const qEnd = (startU + Math.max(u, placedU)) / UNITS_PER_BEAT;
+        const baseFig = key => RHYTHMIC_FIGURES.find(f => f.key === key);
+        const entry = {
+            clef, x: pending.x, beat: pending.qStart, figure: null,
+            notes: pending.members, isRest: false, startTime: pending.rawStart,
+            holdSeconds: pending.holdSeconds, groupId: pending.groupId,
+            rawBeat: pending.rawBeat, rawInt: (nextOnsetBeatRaw !== null && pending.rawBeat != null) ? nextOnsetBeatRaw - pending.rawBeat : null,
+            holdBeats: pending.holdDurationBeats
+        };
+        if (pieces.length === 1) {
+            entry.figure = baseFig(pieces[0].key);
+            if (pieces[0].dot) entry.dotted = true;
+        } else {
+            entry.tiedFigures = pieces.map(pc => pc.dot ? dottedFigure(baseFig(pc.key)) : baseFig(pc.key));
+            entry.figure = entry.tiedFigures[0];
+        }
+        notesOnCanvas.push(entry);
+        voiceTimelineEnd[clef] = Math.max(voiceTimelineEnd[clef], qEnd);
+        pendingClefEntry[clef] = null;
+        resolveTuplets(clef, entry); // dosillo (compás compuesto)
+    }
+
+    // --- GRUPOS IRREGULARES (tresillo, seisillo, dosillo) ---------------------------------------------
+    // Las notas ya se cuantizaron a la rejilla normal del compás (1/4 de pulso en simple, 1/6 en compuesto) cuando
+    // se cerraron -- esa rejilla NO puede representar "3 notas en un pulso" (compás simple) ni "2 notas en un pulso"
+    // (compás compuesto). Por eso, cada vez que se cierra una nota se revisa su PULSO completo con los instantes
+    // REALES (rawBeat) de ataque: si todas las notas del pulso, juntas, llenan el pulso en partes de 1/6 de pulso
+    // que NO caben en la rejilla normal (p. ej. 3 notas a 1/3 de pulso cada una), se reescriben como grupo irregular:
+    //   compás simple:    corcheas de tresillo (3), semicorcheas de seisillo (6) o negra+corchea de tresillo
+    //   compás compuesto: dosillo (2 corcheas que se tocan en el tiempo de 3)
+    // entry.tuplet = { n, id } marca el grupo (el número se dibuja sobre las notas), entry.durBeats es la duración
+    // real, y entry.figure sigue siendo la figura ESCRITA (corchea, semicorchea...).
+    function simpleTupletCandidate(rawBeat, I) {
+        const I6 = Math.round(I * 6);
+        if (!(I6 === 1 || I6 === 2 || I6 === 4)) return false;
+        if (Math.abs(I - I6 / 6) > 0.06) return false;
+        const ph = rawBeat - Math.floor(rawBeat + 0.1);
+        return Math.abs(ph - Math.round(ph * 6) / 6) <= 0.1;
+    }
+    function resolveTuplets(clef, newEntry) {
+        if (!newEntry || newEntry.isRest || newEntry.rawBeat == null) return;
+        const bin = beatBin(newEntry.beat);
+        const inBin = notesOnCanvas.filter(e => e.clef === clef && beatBin(e.beat) === bin);
+        if (inBin.some(e => e.tuplet)) return;
+        const notes = inBin.filter(e => !e.isRest).sort((a, b) => a.beat - b.beat);
+        if (notes.length < 2 || notes.some(e => e.rawBeat == null)) return;
+        const compound = subdivisionMode === 'compound';
+        let cum = 0;
+        const plan = [];
+        for (let i = 0; i < notes.length; i++) {
+            const e = notes[i];
+            let I = e.rawInt;
+            if (I == null) {
+                // Última nota sin "siguiente ataque" que la cierre: se acepta si lo que se sostuvo calza con lo que falta del pulso.
+                const remaining = 1 - cum / 6;
+                if (i === notes.length - 1 && e.holdBeats != null && Math.abs(e.holdBeats - remaining) <= 0.1) I = remaining; else return;
+            }
+            const I6 = Math.round(I * 6);
+            if (I6 < 1 || Math.abs(I - I6 / 6) > 0.06) return;
+            if (Math.abs((e.rawBeat - bin) - cum / 6) > 0.1) return;
+            plan.push({ e, I6 });
+            cum += I6;
+        }
+        if (cum !== 6) return;
+        let n, figFor;
+        if (!compound) {
+            if (!plan.every(x => x.I6 === 1 || x.I6 === 2 || x.I6 === 4)) return;
+            n = plan.some(x => x.I6 === 1) ? 6 : 3;
+            const keyOf = { 1: 'semicorchea', 2: 'corchea', 4: 'negra' };
+            figFor = x => RHYTHMIC_FIGURES.find(f => f.key === keyOf[x.I6]);
+        } else {
+            if (!(plan.length === 2 && plan[0].I6 === 3 && plan[1].I6 === 3)) return;
+            n = 2;
+            figFor = () => RHYTHMIC_FIGURES.find(f => f.key === 'corchea');
+        }
+        const id = clef + ':' + bin + ':' + n + ':' + Math.round(newEntry.rawBeat * 1000);
+        let c = 0;
+        plan.forEach(x => {
+            const e = x.e;
+            e.beat = bin + c / 6;
+            e.x = beatsToX(e.beat);
+            e.figure = figFor(x);
+            e.durBeats = x.I6 / 6;
+            e.tuplet = { n, id };
+            delete e.dotted; delete e.tiedFigures;
+            c += x.I6;
+        });
+        // Los silencios que hubieran quedado en este pulso por la cuantización normal eran artefactos: el grupo llena todo el pulso.
+        notesOnCanvas = notesOnCanvas.filter(e => !(e.clef === clef && e.isRest && beatBin(e.beat) === bin));
+        voiceTimelineEnd[clef] = bin + 1;
     }
 
     // Se llama desde stopNote() cuando se suelta una tecla con MODE: SCANLINE TRACE activo. En vez
@@ -7065,7 +7387,7 @@
             // ya cuantizada (v.seqQStart, calculada AL PULSAR la tecla) es la misma para todas.
             // rawStartTime (el instante real, SIN cuantizar, de Web Audio) se guarda aparte para
             // medir cuánto se sostuvo de verdad -- el respaldo si nunca llega una nota siguiente.
-            pendingChordGroups[gid] = { qStart: v.seqQStart, rawStartTime: v.groupStartTime, members: [] };
+            pendingChordGroups[gid] = { qStart: v.seqQStart, rawBeat: v.seqRawBeat, rawStartTime: v.groupStartTime, members: [] };
         }
         if (v.seqClef) {
             // velocity/soundMode viajan por nota (dos notas del mismo acorde pueden haberse tocado
@@ -7137,7 +7459,7 @@
                 // cae repartido en dos entradas (una por clave) como una sola unidad -- ver
                 // selectSequencerEntry()/undoEscrituraMusical(), que replican exactamente el mismo
                 // patrón de colorLinesSelectedTrail/undoLineasDeColores() de MODE: LÍNEAS DE COLORES.
-                pendingClefEntry[clef] = { qStart: group.qStart, x, members: byClef[clef], holdDurationBeats, rawStart: group.rawStartTime, holdSeconds, groupId: gid };
+                pendingClefEntry[clef] = { qStart: group.qStart, rawBeat: group.rawBeat, x, members: byClef[clef], holdDurationBeats, rawStart: group.rawStartTime, holdSeconds, groupId: gid };
                 voiceTimelineEnd[clef] = Math.max(voiceTimelineEnd[clef], group.qStart);
             });
         }
@@ -7157,6 +7479,33 @@
     const STAFF_BASS_BOTTOM_STEP = -10;   // Sol2: línea inferior de la clave de fa
     const STAFF_BASS_TOP_STEP = -2;       // La3: línea superior de la clave de fa
     const STAFF_MIDDLE_STEP = { treble: 6, bass: -6 }; // línea central de cada clave (decide dirección de la plica)
+
+    // ===== CLAVE MUSICAL (AJUSTES > PARTITURA > "Clave Musical", solo APRENDIZAJE MUSICAL) =====
+    // 'grand' = el pentagrama doble de piano de siempre (clave de Sol arriba + Fa en 4ª abajo). Cualquier otra opción
+    // REEMPLAZA los dos pentagramas por UNO SOLO con la clave elegida; en ese caso todas las notas van al "carril"
+    // 'treble' (entry.clef sigue siendo el nombre del carril, no de la clave) y el carril 'bass' queda vacío.
+    // "bottom" = paso diatónico (Do central = 0) de la línea inferior del pentagrama con esa clave: la línea que lleva
+    // el nombre de la clave está en line-1 líneas sobre ella (Sol4 = paso 4 en la 2ª línea -> bottom 2; Fa3 = paso -4 en
+    // la 4ª -> -10 ó en la 3ª -> -8; Do4 = paso 0 en la línea n -> -2*(n-1)).
+    const CLEF_SPECS = {
+        treble: { kind: 'G', line: 2, bottom: 2,   label: 'CLAVE DE SOL',               xmlSign: 'G', xmlLine: 2 },
+        bass4:  { kind: 'F', line: 4, bottom: -10, label: 'CLAVE DE FA EN 4ª LÍNEA',    xmlSign: 'F', xmlLine: 4 },
+        bass3:  { kind: 'F', line: 3, bottom: -8,  label: 'CLAVE DE FA EN 3ª LÍNEA',    xmlSign: 'F', xmlLine: 3 },
+        do1:    { kind: 'C', line: 1, bottom: 0,   label: 'CLAVE DE DO EN 1ª LÍNEA',    xmlSign: 'C', xmlLine: 1 },
+        do2:    { kind: 'C', line: 2, bottom: -2,  label: 'CLAVE DE DO EN 2ª LÍNEA',    xmlSign: 'C', xmlLine: 2 },
+        do3:    { kind: 'C', line: 3, bottom: -4,  label: 'CLAVE DE DO EN 3ª LÍNEA',    xmlSign: 'C', xmlLine: 3 },
+        do4:    { kind: 'C', line: 4, bottom: -6,  label: 'CLAVE DE DO EN 4ª LÍNEA',    xmlSign: 'C', xmlLine: 4 }
+    };
+    let staffClefMode = 'grand';
+    function clefSpecOf(slot) {
+        if (staffClefMode === 'grand') return slot === 'treble' ? CLEF_SPECS.treble : CLEF_SPECS.bass4;
+        return CLEF_SPECS[staffClefMode];
+    }
+    function staffBottomStep(slot) { return clefSpecOf(slot).bottom; }
+    function staffTopStep(slot) { return clefSpecOf(slot).bottom + 8; }
+    function staffMiddleStep(slot) { return clefSpecOf(slot).bottom + 4; }
+    function staffSlots() { return staffClefMode === 'grand' ? ['treble', 'bass'] : ['treble']; }
+    function staffSlotBottomY(slot, layout) { return slot === 'treble' ? layout.trebleBottomY : layout.bassBottomY; }
 
     // --- Armadura de la tonalidad (key signature) ---
     // Orden estándar en que el círculo de quintas va agregando sostenidos y bemoles.
@@ -7220,6 +7569,33 @@
         }
     };
 
+    // Posiciones de la armadura para CUALQUIER clave (ver CLEF_SPECS): el zigzag estándar (sostenidos Fa-Do-Sol-Re-La-Mi-Si:
+    // -4ª, +5ª, -4ª, -4ª, +5ª, -4ª; bemoles Si-Mi-La-Re-Sol-Do-Fa: +4ª, -5ª, +4ª, -5ª, +4ª, -5ª) en la octava que menos se
+    // sale del pentagrama (si hay empate, la más aguda). Para Sol y Fa en 4ª reproduce exactamente KEY_SIG_STEPS, que sigue
+    // siendo la fuente de esas dos (incluida la excepción grabada de Sol# en Sol5).
+    const keySigStepsCache = {};
+    function keySigStepsFor(slot, useSharps) {
+        const spec = clefSpecOf(slot);
+        if (spec === CLEF_SPECS.treble) return KEY_SIG_STEPS[useSharps ? 'sharp' : 'flat'].treble;
+        if (spec === CLEF_SPECS.bass4) return KEY_SIG_STEPS[useSharps ? 'sharp' : 'flat'].bass;
+        const ck = spec.bottom + (useSharps ? 's' : 'f');
+        if (keySigStepsCache[ck]) return keySigStepsCache[ck];
+        const letters = useSharps ? ['F', 'C', 'G', 'D', 'A', 'E', 'B'] : ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
+        const deltas = useSharps ? [0, -3, 4, -3, -3, 4, -3] : [0, 3, -4, 3, -4, 3, -4];
+        const firstIdx = STAFF_LETTER_INDEX[letters[0]];
+        const bottom = spec.bottom, top = bottom + 8;
+        let best = null;
+        for (let m = -6; m <= 6; m++) {
+            let p = firstIdx + 7 * m, mn = Infinity, mx = -Infinity;
+            const steps = {};
+            for (let i = 0; i < 7; i++) { p += deltas[i]; steps[letters[i]] = p; mn = Math.min(mn, p); mx = Math.max(mx, p); }
+            const over = Math.max(0, bottom - mn, mx - top);
+            if (!best || over < best.over || (over === best.over && m > best.m)) best = { over, m, steps };
+        }
+        keySigStepsCache[ck] = best.steps;
+        return best.steps;
+    }
+
     // Devuelve la armadura de la tónica MAYOR de referencia (currentTonicOffset ya es siempre esa
     // tónica mayor, incluso en modo Menor Relativo -- la relativa menor comparte la armadura de su
     // mayor, así que no hay que ramificar por currentScaleMode aquí, igual que en getPitchRatios).
@@ -7242,7 +7618,7 @@
         const letter = name[0];
         const accidental = name.length > 1 ? name[1] : null; // '#' o 'b'
         const step = STAFF_LETTER_INDEX[letter] + 7 * (octave - 4); // Do central = paso 0
-        const clef = midi >= 60 ? 'treble' : 'bass';
+        const clef = staffClefMode !== 'grand' ? 'treble' : (midi >= 60 ? 'treble' : 'bass'); // pentagrama único: todo va al carril 'treble'
         return { step, accidental, clef };
     }
 
@@ -7324,6 +7700,11 @@
         const trebleFrac = isZenMode
             ? Math.min(0.62, ((HIGHEST_STEP_ON_KEYBOARD - STAFF_TREBLE_BOTTOM_STEP) * (spacing / 2) + SAFETY_MARGIN_PX) / height)
             : 0.30;
+        if (staffClefMode !== 'grand') {
+            // Un solo pentagrama: su línea central va en el centro vertical del lienzo (las notas lejanas llevan líneas adicionales).
+            const b = height * 0.5 + 2 * spacing;
+            return { spacing, half: spacing / 2, trebleBottomY: b, bassBottomY: b };
+        }
         return {
             spacing, half: spacing / 2,
             trebleBottomY: height * trebleFrac, // línea de Mi4
@@ -7344,9 +7725,7 @@
     // MIDI -- la usa la armadura de la tonalidad (KEY_SIG_STEPS), que no tiene un MIDI real detrás
     // de cada sostenido/bemol, solo su posición en el pentagrama.
     function stepToY(step, clef, layout) {
-        return clef === 'treble'
-            ? layout.trebleBottomY - (step - STAFF_TREBLE_BOTTOM_STEP) * layout.half
-            : layout.bassBottomY - (step - STAFF_BASS_BOTTOM_STEP) * layout.half;
+        return staffSlotBottomY(clef, layout) - (step - staffBottomStep(clef)) * layout.half;
     }
 
     const KEY_SIG_GLYPH_SIZE_FACTOR = 1.7; // tamaño de fuente del glifo ♯/♭, en fracción de layout.spacing
@@ -7377,8 +7756,8 @@
     // una nota real). Por eso es una función aparte en vez de reusar drawLedgerLines(): la condición
     // acá es "¿cae fuera del pentagrama?" a secas, sin mirar paridad línea/espacio.
     function needsKeySigLedgerLine(step, clef) {
-        const topStep = clef === 'treble' ? STAFF_TREBLE_TOP_STEP : STAFF_BASS_TOP_STEP;
-        const bottomStep = clef === 'treble' ? STAFF_TREBLE_BOTTOM_STEP : STAFF_BASS_BOTTOM_STEP;
+        const topStep = staffTopStep(clef);
+        const bottomStep = staffBottomStep(clef);
         return step > topStep || step < bottomStep;
     }
     function drawKeySigLedgerLine(ctx, x, y, color) {
@@ -7400,7 +7779,7 @@
     function drawKeySignatureForClef(ctx, clef, layout, startX) {
         const { sig, fontSize, advance, glyphWidth } = getKeySigLayout(ctx, layout);
         if (sig.count === 0) return;
-        const stepsTable = KEY_SIG_STEPS[sig.useSharps ? 'sharp' : 'flat'][clef];
+        const stepsTable = keySigStepsFor(clef, sig.useSharps);
         const glyph = sig.useSharps ? '♯' : '♭';
         const onLightBg = paintBgMode === 'white';
         const ledgerColor = onLightBg ? 'rgba(20,20,20,0.9)' : 'rgba(255,255,255,0.6)';
@@ -7431,6 +7810,10 @@
     // que usa toda la app; currentCompas ya guarda solo el numerador, "cuántos tiempos" hay por
     // compás, ver changeCompas()/#sub-compas). Arranca en 4/4 (currentCompas default = 4) y
     // cambia en vivo si el maestro elige 2 o 3 tiempos.
+    // Compás simple: numerador = pulsos, denominador 4 (la negra es el pulso). Compás compuesto: el pulso es la negra
+    // con puntillo = 3 corcheas, así que 2/3/4 pulsos se escriben 6/8, 9/8 y 12/8.
+    function timeSigNumeratorText() { return String(subdivisionMode === 'compound' ? currentCompas * 3 : currentCompas); }
+    function timeSigDenominatorText() { return subdivisionMode === 'compound' ? '8' : '4'; }
     const TIME_SIG_FONT_FACTOR = 2.6;  // tamaño de cada dígito, en fracción de layout.spacing
     const TIME_SIG_GAP_BEFORE = 8;     // aire entre la armadura (o la clave, si no hay armadura) y el compás
     const TIME_SIG_GAP_AFTER = 12;     // aire entre el compás y la primera nota
@@ -7442,8 +7825,8 @@
         const fontSize = layout.spacing * TIME_SIG_FONT_FACTOR;
         ctx.save();
         ctx.font = `bold ${fontSize.toFixed(1)}px sans-serif`;
-        const numWidth = ctx.measureText(String(currentCompas)).width;
-        const denWidth = ctx.measureText('4').width;
+        const numWidth = ctx.measureText(timeSigNumeratorText()).width;
+        const denWidth = ctx.measureText(timeSigDenominatorText()).width;
         ctx.restore();
         const digitWidth = Math.max(numWidth, denWidth);
         return { fontSize, digitWidth, width: TIME_SIG_GAP_BEFORE + digitWidth + TIME_SIG_GAP_AFTER };
@@ -7455,8 +7838,8 @@
     function drawTimeSignatureForClef(ctx, clef, layout, startX) {
         const { fontSize, digitWidth } = getTimeSigLayout(ctx, layout);
         const centerX = startX + TIME_SIG_GAP_BEFORE + digitWidth / 2;
-        const topStep = clef === 'treble' ? STAFF_TREBLE_TOP_STEP : STAFF_BASS_TOP_STEP;
-        const bottomStep = clef === 'treble' ? STAFF_TREBLE_BOTTOM_STEP : STAFF_BASS_BOTTOM_STEP;
+        const topStep = staffTopStep(clef);
+        const bottomStep = staffBottomStep(clef);
         const onLightBg = paintBgMode === 'white';
         ctx.save();
         ctx.fillStyle = onLightBg ? 'rgba(20,20,20,0.9)' : 'rgba(255,255,255,0.75)';
@@ -7465,8 +7848,8 @@
         ctx.font = `bold ${fontSize.toFixed(1)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(String(currentCompas), centerX, stepToY(topStep - 2, clef, layout));
-        ctx.fillText('4', centerX, stepToY(bottomStep + 2, clef, layout));
+        ctx.fillText(timeSigNumeratorText(), centerX, stepToY(topStep - 2, clef, layout));
+        ctx.fillText(timeSigDenominatorText(), centerX, stepToY(bottomStep + 2, clef, layout));
         ctx.restore();
     }
 
@@ -7479,66 +7862,86 @@
     // líneas blancas sobre blanco. Con el fondo en Blanco se dibujan en cambio en un gris oscuro
     // casi negro, bien opaco, para que se sigan viendo con claridad; con cualquier otro fondo
     // (incluido "Automático") el aspecto es exactamente el de siempre.
+    // Ancho del símbolo de clave de un carril (Sol, Fa o Do) con la geometría actual.
+    let cClefPath = null;
+    function clefGlyphWidth(ctx, slot, layout) {
+        const spec = clefSpecOf(slot);
+        if (spec.kind === 'C') return 522 * layout.spacing * 0.00508;
+        ctx.save();
+        ctx.font = spec.kind === 'G' ? `${(layout.spacing * 4.6).toFixed(1)}px serif` : `${(layout.spacing * 3.2).toFixed(1)}px serif`;
+        const w = ctx.measureText(spec.kind === 'G' ? '\u{1D11E}' : '\u{1D122}').width;
+        ctx.restore();
+        return w;
+    }
+    // Dibuja el símbolo de clave de un carril. Sol/Fa usan el glifo de la fuente (como siempre); la clave de Do usa el
+    // contorno vectorial de FreeSerif que ya trae el editor PARTITURA (SE_GLYPHS.cclef), porque pocas fuentes del sistema
+    // tienen el glifo de Do. El Fa en 3ª línea es el mismo glifo desplazado una línea hacia abajo.
+    function drawClefSymbol(ctx, slot, layout) {
+        const spec = clefSpecOf(slot);
+        const bottomY = staffSlotBottomY(slot, layout);
+        ctx.textBaseline = 'alphabetic';
+        if (spec.kind === 'G') {
+            ctx.font = `${(layout.spacing * 4.6).toFixed(1)}px serif`;
+            ctx.fillText('\u{1D11E}', 12, bottomY - layout.spacing * 0.4);
+        } else if (spec.kind === 'F') {
+            ctx.font = `${(layout.spacing * 3.2).toFixed(1)}px serif`;
+            ctx.fillText('\u{1D122}', 12, bottomY - layout.spacing * 1.55 + (4 - spec.line) * layout.spacing);
+        } else {
+            const k = layout.spacing * 0.00508;
+            const yLine = bottomY - (spec.line - 1) * layout.spacing;
+            if (!cClefPath && typeof SE_GLYPHS !== 'undefined' && SE_GLYPHS.cclef) cClefPath = new Path2D(SE_GLYPHS.cclef.d);
+            if (cClefPath) {
+                ctx.save();
+                ctx.translate(12, yLine + 370 * k); ctx.scale(k, k);
+                ctx.fill(cClefPath);
+                ctx.restore();
+            } else {
+                ctx.font = `${(layout.spacing * 4).toFixed(1)}px serif`;
+                ctx.fillText('\u{1D121}', 12, yLine + layout.spacing);
+            }
+        }
+    }
+
     function drawGrandStaff(ctx, layout) {
         const onLightBg = paintBgMode === 'white';
         const staffColor = onLightBg ? 'rgba(30,30,30,0.75)' : 'rgba(255,255,255,0.5)';
         const staffGlow = onLightBg ? 'rgba(30,30,30,0.4)' : 'rgba(255,255,255,0.35)';
         const clefColor = onLightBg ? 'rgba(20,20,20,0.9)' : 'rgba(255,255,255,0.75)';
         const clefGlow = onLightBg ? 'rgba(20,20,20,0.55)' : 'rgba(255,255,255,0.5)';
+        const slots = staffSlots();
 
         ctx.save();
         ctx.strokeStyle = staffColor;
         ctx.lineWidth = 1.3;
         ctx.shadowBlur = 4;
         ctx.shadowColor = staffGlow;
-        for (let i = 0; i < 5; i++) {
-            const yT = layout.trebleBottomY - i * layout.spacing;
-            ctx.beginPath(); ctx.moveTo(0, yT); ctx.lineTo(ctx.canvas.width, yT); ctx.stroke();
-            const yB = layout.bassBottomY - i * layout.spacing;
-            ctx.beginPath(); ctx.moveTo(0, yB); ctx.lineTo(ctx.canvas.width, yB); ctx.stroke();
-        }
+        slots.forEach(slot => {
+            const by = staffSlotBottomY(slot, layout);
+            for (let i = 0; i < 5; i++) {
+                const y = by - i * layout.spacing;
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(ctx.canvas.width, y); ctx.stroke();
+            }
+        });
         ctx.restore();
 
         ctx.save();
         ctx.fillStyle = clefColor;
         ctx.shadowBlur = 8;
         ctx.shadowColor = clefGlow;
-        ctx.textBaseline = 'alphabetic';
-        // Clave de SOL (𝄞): el rizo INTERIOR del símbolo (el pequeño lazo cerrado donde el trazo se
-        // cruza a sí mismo, no el lazo grande de arriba ni la cola de abajo) debe encerrar la línea
-        // de Sol4 (2ª línea desde abajo) -- así es como esta clave "marca" esa nota, por definición.
-        // CORREGIDO (a pedido del usuario, calibrado con una rejilla de referencia superpuesta
-        // sobre el glifo real): el desplazamiento anterior (+0.7) dejaba ese lazo casi a la altura
-        // de Mi4 (línea inferior), una línea entera más abajo de lo que corresponde. -0.4 fue
-        // calibrado a ojo contra Sol4 con el mismo método (superponer una línea de referencia exacta
-        // y ajustar hasta que el lazo la parta al medio) -- sigue siendo "a ojo" porque el glifo es
-        // una fuente del sistema (no un trazo propio), pero ahora contra la línea correcta.
-        ctx.font = `${(layout.spacing * 4.6).toFixed(1)}px serif`;
-        const trebleClefWidth = ctx.measureText('\u{1D11E}').width;
-        ctx.fillText('\u{1D11E}', 12, layout.trebleBottomY - layout.spacing * 0.4);
-        // Clave de FA (𝄢): los dos puntos del símbolo flanquean la línea de Fa3 (2ª desde arriba).
-        ctx.font = `${(layout.spacing * 3.2).toFixed(1)}px serif`;
-        const bassClefWidth = ctx.measureText('\u{1D122}').width;
-        ctx.fillText('\u{1D122}', 12, layout.bassBottomY - layout.spacing * 1.55);
+        // Clave de SOL (𝄞): el rizo INTERIOR del símbolo debe encerrar la línea de Sol4 (2ª línea desde abajo); Clave de FA (𝄢): los
+        // dos puntos flanquean la línea de Fa3 (ver drawClefSymbol(): calibrado a ojo contra una rejilla de referencia, como siempre).
+        const clefWidths = {};
+        slots.forEach(slot => { clefWidths[slot] = clefGlyphWidth(ctx, slot, layout); drawClefSymbol(ctx, slot, layout); });
         ctx.restore();
 
-        // Armadura de la tonalidad (sostenidos o bemoles), justo después de cada clave -- ver
-        // getKeySignature/KEY_SIG_STEPS más arriba. SEQ_X_OFFSET ya reserva el espacio que ocupa
-        // (ver updateSeqXOffset), así que ni la rejilla de compás ni las notas se dibujan encima.
+        // Armadura de la tonalidad y compás, justo después de cada clave -- ver getKeySigLayout/updateSeqXOffset (misma geometría).
         const CLEF_KEYSIG_GAP = 6; // aire entre el borde del glifo de clave y el primer símbolo de la armadura
-        drawKeySignatureForClef(ctx, 'treble', layout, 12 + trebleClefWidth + CLEF_KEYSIG_GAP);
-        drawKeySignatureForClef(ctx, 'bass', layout, 12 + bassClefWidth + CLEF_KEYSIG_GAP);
-
-        // Compás (fracción, p.ej. 4/4): a pedido del usuario, justo después de la armadura -- clave,
-        // armadura y compás, en ese orden, es el grupo de símbolos de apertura de cualquier
-        // partitura real, siempre antes de la primera nota. getKeySigLayout() no depende de la
-        // clave (mismo glifo/cantidad para sol y fa), así que este mismo cálculo de reserva sirve
-        // para ambas -- ver también updateSeqXOffset(), que reserva el mismo ancho para que las
-        // notas nunca empiecen a dibujarse encima.
         const keySigLayout = getKeySigLayout(ctx, layout);
         const keySigReserve = keySigLayout.width > 0 ? CLEF_KEYSIG_GAP + keySigLayout.width : 0;
-        drawTimeSignatureForClef(ctx, 'treble', layout, 12 + trebleClefWidth + keySigReserve);
-        drawTimeSignatureForClef(ctx, 'bass', layout, 12 + bassClefWidth + keySigReserve);
+        slots.forEach(slot => {
+            drawKeySignatureForClef(ctx, slot, layout, 12 + clefWidths[slot] + CLEF_KEYSIG_GAP);
+            drawTimeSignatureForClef(ctx, slot, layout, 12 + clefWidths[slot] + keySigReserve);
+        });
     }
 
     // Líneas adicionales (ledger lines): solo se dibujan cuando una nota cae en una posición de
@@ -7546,9 +7949,9 @@
     // al convenio de notación real, agregando tantas como haga falta hasta llegar a la nota.
     function drawLedgerLines(ctx, x, step, clef, layout, color, scale) {
         const halfW = 11 * (scale || 1);
-        const topStep = clef === 'treble' ? STAFF_TREBLE_TOP_STEP : STAFF_BASS_TOP_STEP;
-        const bottomStep = clef === 'treble' ? STAFF_TREBLE_BOTTOM_STEP : STAFF_BASS_BOTTOM_STEP;
-        const bottomY = clef === 'treble' ? layout.trebleBottomY : layout.bassBottomY;
+        const topStep = staffTopStep(clef);
+        const bottomStep = staffBottomStep(clef);
+        const bottomY = staffSlotBottomY(clef, layout);
         if (step <= topStep && step >= bottomStep) return; // dentro del pentagrama, no hace falta ninguna
         ctx.save();
         ctx.strokeStyle = color;
@@ -7558,12 +7961,12 @@
         ctx.shadowColor = color;
         if (step > topStep) {
             for (let s = topStep + 2; s <= step; s += 2) {
-                const y = bottomY - (s - (clef === 'treble' ? STAFF_TREBLE_BOTTOM_STEP : STAFF_BASS_BOTTOM_STEP)) * layout.half;
+                const y = bottomY - (s - bottomStep) * layout.half;
                 ctx.beginPath(); ctx.moveTo(x - halfW, y); ctx.lineTo(x + halfW, y); ctx.stroke();
             }
         } else {
             for (let s = bottomStep - 2; s >= step; s -= 2) {
-                const y = bottomY - (s - (clef === 'treble' ? STAFF_TREBLE_BOTTOM_STEP : STAFF_BASS_BOTTOM_STEP)) * layout.half;
+                const y = bottomY - (s - bottomStep) * layout.half;
                 ctx.beginPath(); ctx.moveTo(x - halfW, y); ctx.lineTo(x + halfW, y); ctx.stroke();
             }
         }
@@ -7848,7 +8251,7 @@
         }
         let stemDown = false, stemColor = notes[0] ? notes[0].color : '#fff';
         if (figure.stem) {
-            const middle = STAFF_MIDDLE_STEP[clef];
+            const middle = staffMiddleStep(clef);
             let extreme = notes[0], maxDev = -Infinity;
             notes.forEach(nt => { const dev = Math.abs(nt.info.step - middle); if (dev > maxDev) { maxDev = dev; extreme = nt; } });
             stemDown = extreme.info.step > middle;
@@ -7878,6 +8281,7 @@
             entry.tiedFigures.forEach(fig => {
                 const figPx = px + cumBeats * SEQ_PIXELS_PER_BEAT;
                 const cols = drawChordFigureAt(ctx, figPx, clef, entry.notes, fig, staffLayout, scale);
+                if (fig.dotted) cols.notes.forEach(nt => drawAugmentationDot(ctx, figPx, nt.y, displayScaffoldColor(nt.color), scale));
                 if (prevCols) {
                     // Cada nota del acorde se liga con la de igual midi en la columna anterior --
                     // ambas columnas comparten entry.notes, así que el índice coincide 1 a 1.
@@ -7927,6 +8331,13 @@
         ctx.strokeText(entry.figure.glyph, px, y);
         ctx.fillStyle = NOTATION_NEUTRAL_TONE;
         ctx.fillText(entry.figure.glyph, px, y);
+        // Silencio con puntillo (compás compuesto: el silencio de un pulso entero es una negra con puntillo).
+        if (entry.dotted) {
+            const dotX = px + size * 0.32, dotY = y - size * 0.12;
+            ctx.beginPath(); ctx.arc(dotX, dotY, Math.max(2, staffLayout.spacing * 0.16), 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 1.4; ctx.stroke();
+            ctx.fill();
+        }
         ctx.restore();
     }
 
@@ -7958,7 +8369,7 @@
     function drawBeamGroup(ctx, entries, staffLayout, offset) {
         offset = offset || 0;
         const clef = entries[0].clef;
-        const middle = STAFF_MIDDLE_STEP[clef];
+        const middle = staffMiddleStep(clef);
         const scale = noteheadScaleFor(staffLayout);
         const nw = 7.5 * scale;
 
@@ -8011,7 +8422,17 @@
             const isSemi = i < entries.length && entries[i].figure.key === 'semicorchea';
             if (isSemi && runStart === -1) runStart = i;
             if (!isSemi && runStart !== -1) {
-                drawBeamStrip(ctx, stemXOf(runStart), stemXOf(Math.max(runStart, i - 1)), beamY, stemDown, stemColor, 1);
+                const runEnd = Math.max(runStart, i - 1);
+                if (runEnd > runStart) {
+                    drawBeamStrip(ctx, stemXOf(runStart), stemXOf(runEnd), beamY, stemDown, stemColor, 1);
+                } else {
+                    // Semicorchea suelta dentro del grupo (p. ej. corchea con puntillo + semicorchea en 6/8): media barra
+                    // corta hacia el vecino, como en la notación impresa, en vez de una barra de largo cero.
+                    const neighbor = runStart > 0 ? runStart - 1 : Math.min(entries.length - 1, runStart + 1);
+                    const sx = stemXOf(runStart), nx = stemXOf(neighbor);
+                    const stubEnd = sx + (nx >= sx ? 1 : -1) * Math.min(Math.abs(nx - sx), 10 * scale + 4);
+                    if (neighbor !== runStart) drawBeamStrip(ctx, sx, stubEnd, beamY, stemDown, stemColor, 1);
+                }
                 runStart = -1;
             }
         }
@@ -8020,9 +8441,59 @@
             const entryPx = r.entry.x - offset;
             r.notes.forEach(nt => drawLedgerLines(ctx, entryPx, nt.info.step, clef, staffLayout, displayScaffoldColor(nt.color), scale));
             r.notes.forEach(nt => drawNotehead(ctx, entryPx, nt.y, displayNoteColor(nt.color), r.entry.figure.hollow, nt.info.accidental, scale, nt.microtonalMark));
+            if (r.entry.dotted) r.notes.forEach(nt => drawAugmentationDot(ctx, entryPx, nt.y, displayScaffoldColor(nt.color), scale));
             if (learningModeEnabled) {
                 r.notes.forEach(nt => drawNoteLabel(ctx, entryPx, nt.y, nt.color, nt.midi, staffLayout, scale));
             }
+        });
+    }
+
+    // Número (3 / 6 / 2) y, si el grupo no está unido por una sola barra, corchete de los grupos irregulares
+    // (tresillo, seisillo, dosillo): se dibuja del lado de las plicas, un poco más allá del extremo de la barra.
+    function drawTupletMarks(ctx, staffLayout, offset) {
+        const groups = new Map();
+        notesOnCanvas.forEach(e => {
+            if (e.tuplet && !e.isRest) {
+                let g = groups.get(e.tuplet.id);
+                if (!g) { g = []; groups.set(e.tuplet.id, g); }
+                g.push(e);
+            }
+        });
+        if (groups.size === 0) return;
+        const scale = noteheadScaleFor(staffLayout);
+        groups.forEach(list => {
+            list.sort((a, b) => a.beat - b.beat);
+            const x1 = list[0].x - offset, x2 = list[list.length - 1].x - offset;
+            if (x2 < -40 || x1 > wCan.width + 40) return;
+            const clef = list[0].clef;
+            const middle = staffMiddleStep(clef);
+            let extremeStep = null, maxDev = -Infinity, minY = Infinity, maxY = -Infinity, color = '#fff';
+            list.forEach(e => e.notes.forEach(nt => {
+                const sy = getStaffY(nt.midi, staffLayout);
+                const dev = Math.abs(sy.info.step - middle);
+                if (dev > maxDev) { maxDev = dev; extremeStep = sy.info.step; color = nt.color; }
+                minY = Math.min(minY, sy.y); maxY = Math.max(maxY, sy.y);
+            }));
+            const stemDown = extremeStep !== null && extremeStep > middle;
+            const beamed = list.length >= 2 && list.every(e => e.figure.flags >= 1);
+            const y = stemDown ? maxY + 50 * scale + 6 : minY - 50 * scale - 6;
+            const col = displayScaffoldColor(color);
+            const n = String(list[0].tuplet.n);
+            ctx.save();
+            ctx.font = `italic bold ${(15 * scale + 3).toFixed(0)}px serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const cx = (x1 + x2) / 2;
+            if (!beamed && x2 > x1) {
+                const tw = ctx.measureText(n).width + 8;
+                const tick = stemDown ? -6 : 6;
+                ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 3;
+                const drawBracket = () => { ctx.beginPath(); ctx.moveTo(x1, y + tick); ctx.lineTo(x1, y); ctx.lineTo(cx - tw / 2, y); ctx.moveTo(cx + tw / 2, y); ctx.lineTo(x2, y); ctx.lineTo(x2, y + tick); ctx.stroke(); };
+                drawBracket();
+                ctx.strokeStyle = col; ctx.lineWidth = 1.5; drawBracket();
+            }
+            ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.strokeText(n, cx, y);
+            ctx.fillStyle = col; ctx.fillText(n, cx, y);
+            ctx.restore();
         });
     }
 
@@ -8058,15 +8529,18 @@
                 // -- una figura con punto ya representa por sí sola una duración de más de un pulso,
                 // así que tampoco debe arrastrarse a un grupo con barra compartida con la nota
                 // siguiente.
-                if (!entry.isRest && entry.figure.flags >= 1 && !entry.tiedFigures && !entry.dotted) {
+                // En compás compuesto una corchea/semicorchea CON PUNTILLO sí se une con barra a sus vecinas del mismo pulso
+                // (corchea con puntillo + semicorchea es la célula más común de 6/8); en simple se mantiene como siempre.
+                const dotOk = e2 => !e2.dotted || subdivisionMode === 'compound';
+                if (!entry.isRest && entry.figure.flags >= 1 && !entry.tiedFigures && dotOk(entry)) {
                     let m = k + 1;
                     while (
                         m < idxs.length &&
                         !notesOnCanvas[idxs[m]].isRest &&
                         notesOnCanvas[idxs[m]].figure.flags >= 1 &&
                         !notesOnCanvas[idxs[m]].tiedFigures &&
-                        !notesOnCanvas[idxs[m]].dotted &&
-                        Math.floor(notesOnCanvas[idxs[m]].beat) === Math.floor(entry.beat)
+                        dotOk(notesOnCanvas[idxs[m]]) &&
+                        beatBin(notesOnCanvas[idxs[m]].beat) === beatBin(entry.beat)
                     ) { m++; }
                     const groupIdxs = idxs.slice(k, m);
                     if (groupIdxs.length >= 2) {
@@ -8117,6 +8591,8 @@
             }
             if (entry.x >= seqVisibleMinX && entry.x <= seqVisibleMaxX) drawChordFigure(ctx, entry, staffLayout, offset);
         }
+
+        drawTupletMarks(ctx, staffLayout, offset);
 
         // Destello de MODO REPRODUCCIÓN (ver playbackGlowingMarks/drawPlaybackFlash()): pasada aparte
         // al final, sobre TODAS las entradas marcadas como sonando ahora mismo por la reproducción --
@@ -8226,6 +8702,14 @@
         return pieces;
     }
 
+    // Compás compuesto: mismo contrato que decomposeSpanIntoFigures() pero respetando los pulsos (ver compoundPieces()).
+    // Las duraciones salen en PULSOS (negra con puntillo = 1).
+    const COMPOUND_XML_TYPE = { semicorchea: '16th', corchea: 'eighth', negra: 'quarter', blanca: 'half', redonda: 'whole' };
+    function decomposeSpanCompound(startBeat, durBeats) {
+        const startU = Math.round(startBeat * 6), totalU = Math.max(1, Math.round(durBeats * 6));
+        return compoundPieces(startU, totalU, true).map(pc => ({ beat: pc.startU / 6, durBeats: pc.u / 6, type: COMPOUND_XML_TYPE[pc.key], dots: pc.dot ? 1 : 0 }));
+    }
+
     // MIDI (+ frecuencia real opcional, para el residuo microtonal -- ver noteMicrotonalMark(),
     // junto a getStaffInfo()) a paso/alteración/octava de MusicXML. Usa la MISMA tabla de grafía
     // (noteNamesSharp/noteNamesFlatSpelling) que ya usa getStaffInfo() para el pentagrama en
@@ -8267,6 +8751,7 @@
         if (maxEndBeat <= 1e-6) return null;
 
         const compas = currentCompas;
+        const compound = subdivisionMode === 'compound';
         const totalMeasures = Math.max(1, Math.ceil((maxEndBeat - 1e-6) / compas));
         const totalBeats = totalMeasures * compas;
 
@@ -8290,7 +8775,8 @@
                 if (dur > 1e-6) {
                     spans.push({
                         beat: entry.beat, durBeats: dur, isRest: entry.isRest,
-                        notes: entry.isRest ? [] : entry.notes.map(n => ({ midi: n.midi, freq: n.freq }))
+                        notes: entry.isRest ? [] : entry.notes.map(n => ({ midi: n.midi, freq: n.freq })),
+                        tuplet: entry.tuplet || null, figKey: entry.figure ? entry.figure.key : null
                     });
                     cursor = entry.beat + dur;
                 }
@@ -8309,7 +8795,16 @@
         function expandClefSpans(spans) {
             const pieces = [];
             spans.forEach(span => {
-                const figs = decomposeSpanIntoFigures(span.beat, span.durBeats, compas);
+                if (span.tuplet && !span.isRest) {
+                    // Grupo irregular (tresillo, seisillo, dosillo): una sola figura con <time-modification>.
+                    const n = span.tuplet.n;
+                    const normal = n === 2 ? 3 : (n === 3 ? 2 : 4);
+                    pieces.push({ beat: span.beat, durBeats: span.durBeats, type: COMPOUND_XML_TYPE[span.figKey] || 'eighth', dots: 0,
+                        isRest: false, notes: span.notes, tieStart: false, tieStop: false,
+                        tupletMod: { actual: n, normal }, tupletId: span.tuplet.id });
+                    return;
+                }
+                const figs = compound ? decomposeSpanCompound(span.beat, span.durBeats) : decomposeSpanIntoFigures(span.beat, span.durBeats, compas);
                 figs.forEach((fig, i) => {
                     pieces.push({
                         beat: fig.beat, durBeats: fig.durBeats, type: fig.type, dots: fig.dots,
@@ -8319,11 +8814,19 @@
                     });
                 });
             });
+            // Inicio/fin de cada grupo irregular consecutivo (<tuplet type="start|stop"/>).
+            for (let i = 0; i < pieces.length; i++) {
+                const p = pieces[i];
+                if (!p.tupletId) continue;
+                if (i === 0 || pieces[i - 1].tupletId !== p.tupletId) p.tupletStart = true;
+                if (i === pieces.length - 1 || pieces[i + 1].tupletId !== p.tupletId) p.tupletStop = true;
+            }
             return pieces;
         }
 
         const treblePieces = expandClefSpans(buildClefSpans('treble'));
-        const bassPieces = expandClefSpans(buildClefSpans('bass'));
+        const singleStaff = staffClefMode !== 'grand'; // pentagrama único (Clave Musical): solo el carril 'treble', con la clave elegida
+        const bassPieces = singleStaff ? [] : expandClefSpans(buildClefSpans('bass'));
 
         // 4) Agrupa las piezas de cada clave en compases (0-indexado) -- por construcción, ninguna
         // pieza cruza nunca un límite de compás, así que este índice es exacto.
@@ -8342,8 +8845,10 @@
         // 5) Serializa a XML. divisions=8 (por negra) -- múltiplo común de todas las duraciones de
         // MUSICXML_FIGURE_DURATIONS (la más fina, semicorchea puntillo = 0.375 pulso = 3
         // divisiones), así toda <duration> sale como un entero exacto, sin redondeos.
-        const divisions = 8;
-        const toDivisions = beats => Math.round(beats * divisions);
+        // divisions=24 por negra: múltiplo común de la semicorchea con puntillo (3/8 de negra) y de los tercios de
+        // negra del tresillo. En compás compuesto el pulso (negra con puntillo) vale 1.5 negras.
+        const divisions = 24;
+        const toDivisions = beats => Math.round(beats * (compound ? 1.5 : 1) * divisions);
         const sig = getKeySignature(currentTonicOffset);
         const fifths = sig.useSharps ? sig.count : -sig.count;
         const modeXml = currentScaleMode === 'relative_minor' ? 'minor' : 'major';
@@ -8371,11 +8876,14 @@
                 const accName = MUSICXML_ACCIDENTAL_NAME[String(alter)];
                 if (accName) s += `        <accidental>${accName}</accidental>\n`;
             }
+            if (piece.tupletMod) s += `        <time-modification>\n          <actual-notes>${piece.tupletMod.actual}</actual-notes>\n          <normal-notes>${piece.tupletMod.normal}</normal-notes>\n        </time-modification>\n`;
             s += `        <staff>${piece.staff}</staff>\n`;
-            if (!piece.isRest && (piece.tieStart || piece.tieStop)) {
+            if (!piece.isRest && (piece.tieStart || piece.tieStop || piece.tupletStart || piece.tupletStop)) {
                 s += '        <notations>\n';
                 if (piece.tieStart) s += '          <tied type="start"/>\n';
                 if (piece.tieStop) s += '          <tied type="stop"/>\n';
+                if (piece.tupletStart && !isChordMember) s += '          <tuplet type="start" bracket="yes"/>\n';
+                if (piece.tupletStop && !isChordMember) s += '          <tuplet type="stop"/>\n';
                 s += '        </notations>\n';
             }
             s += '      </note>\n';
@@ -8395,14 +8903,19 @@
                 xml += '      <attributes>\n';
                 xml += `        <divisions>${divisions}</divisions>\n`;
                 xml += `        <key>\n          <fifths>${fifths}</fifths>\n          <mode>${modeXml}</mode>\n        </key>\n`;
-                xml += `        <time>\n          <beats>${compas}</beats>\n          <beat-type>4</beat-type>\n        </time>\n`;
-                xml += '        <staves>2</staves>\n';
-                xml += '        <clef number="1">\n          <sign>G</sign>\n          <line>2</line>\n        </clef>\n';
-                xml += '        <clef number="2">\n          <sign>F</sign>\n          <line>4</line>\n        </clef>\n';
+                xml += `        <time>\n          <beats>${compound ? compas * 3 : compas}</beats>\n          <beat-type>${compound ? 8 : 4}</beat-type>\n        </time>\n`;
+                if (singleStaff) {
+                    const cs = CLEF_SPECS[staffClefMode];
+                    xml += `        <clef>\n          <sign>${cs.xmlSign}</sign>\n          <line>${cs.xmlLine}</line>\n        </clef>\n`;
+                } else {
+                    xml += '        <staves>2</staves>\n';
+                    xml += '        <clef number="1">\n          <sign>G</sign>\n          <line>2</line>\n        </clef>\n';
+                    xml += '        <clef number="2">\n          <sign>F</sign>\n          <line>4</line>\n        </clef>\n';
+                }
                 xml += '      </attributes>\n';
                 xml += '      <direction placement="above">\n        <direction-type>\n          <metronome>\n';
-                xml += '            <beat-unit>quarter</beat-unit>\n            <per-minute>' + currentBPM + '</per-minute>\n';
-                xml += `          </metronome>\n        </direction-type>\n        <sound tempo="${currentBPM}"/>\n      </direction>\n`;
+                xml += '            <beat-unit>quarter</beat-unit>\n' + (compound ? '            <beat-unit-dot/>\n' : '') + '            <per-minute>' + currentBPM + '</per-minute>\n';
+                xml += `          </metronome>\n        </direction-type>\n        <sound tempo="${compound ? currentBPM * 1.5 : currentBPM}"/>\n      </direction>\n`;
             }
 
             const tPieces = trebleMeasures[m].slice().sort((a, b) => a.beat - b.beat);
@@ -8421,7 +8934,7 @@
             // <backup> rebobina el cursor de tiempo al principio del compás para poder escribir la
             // segunda clave (fa) a continuación -- convención estándar de MusicXML para un
             // instrumento de más de un pentagrama en la MISMA parte (ver <staves>2</staves> arriba).
-            if (trebleDivisionsUsed > 0) {
+            if (trebleDivisionsUsed > 0 && !singleStaff) {
                 xml += `      <backup>\n        <duration>${trebleDivisionsUsed}</duration>\n      </backup>\n`;
             }
             bPieces.forEach(p => {
@@ -9684,8 +10197,199 @@
         updateSeqXOffset();
         updateSeqPixelsPerBeat(); // recalcula el ancho de pulso: 6 compases completos con el nuevo total de tiempos
         markActiveDropdownOption('sub-compas', value);
-        showNotification(`COMPÁS: ${currentCompas} TIEMPOS`);
+        showNotification(subdivisionMode === 'compound' ? `COMPÁS ${currentCompas * 3}/8 (${currentCompas} PULSOS)` : `COMPÁS: ${currentCompas} TIEMPOS`);
     }
+
+    // ===================== SUBDIVISIÓN DEL PULSO (AJUSTES, solo APRENDIZAJE MUSICAL) =====================
+    // A pedido del usuario: hasta ahora toda la escritura estaba pensada para la división BINARIA del pulso (compases
+    // simples: el pulso es la negra y se divide en 2). "Compuestos" agrega la división TERNARIA: el pulso es la negra
+    // con puntillo y se divide en 3 (6/8, 9/8, 12/8). Ver subdivisionMode/UNITS_PER_BEAT/GRID_UNIT junto a quantizeBeats().
+    function updateCompasMenuLabels() {
+        const ul = document.getElementById('sub-compas');
+        if (!ul) return;
+        const compound = subdivisionMode === 'compound';
+        ul.querySelectorAll(':scope > li').forEach(li => {
+            const n = parseInt(li.dataset.value, 10);
+            li.textContent = compound ? `${n * 3}/8 (${n} pulsos)` : `${n} tiempos`;
+        });
+        markActiveDropdownOption('sub-compas', currentCompas);
+    }
+
+    // Devuelve true si el modo cambió. Cambiar de modo reinicia la partitura escrita (sus duraciones están medidas con
+    // otra unidad y mezclarlas la dibujaría mal); si ya hay algo escrito se pide confirmación, salvo silent=true.
+    function setSubdivisionMode(mode, silent) {
+        if (mode !== 'simple' && mode !== 'compound') return false;
+        if (mode === subdivisionMode) return false;
+        if (!silent && notesOnCanvas.length > 0) {
+            if (!window.confirm('Cambiar la subdivisión del pulso reinicia la partitura escrita en el pentagrama (sus figuras se miden con otra unidad). ¿Continuar?')) return false;
+        }
+        if (playbackState !== 'stopped') stopPlayback();
+        notesOnCanvas = []; seqSelectedEntry = null;
+        pendingChordGroups = {};
+        pendingClefEntry = { treble: null, bass: null };
+        voiceTimelineEnd = { treble: 0, bass: 0 };
+        voiceTimelineStarted = { treble: false, bass: false };
+        subdivisionMode = mode;
+        UNITS_PER_BEAT = mode === 'compound' ? 6 : 4;
+        GRID_UNIT = 1 / UNITS_PER_BEAT;
+        RHYTHMIC_FIGURES = mode === 'compound' ? COMPOUND_RHYTHMIC_FIGURES : SIMPLE_RHYTHMIC_FIGURES;
+        REST_FIGURES = mode === 'compound' ? COMPOUND_REST_FIGURES : SIMPLE_REST_FIGURES;
+        applyRhythmTolerances();
+        currentCompas = mode === 'compound' ? 2 : 4; // 6/8 / 4/4 por defecto
+        updateCompasMenuLabels();
+        updateSeqXOffset();
+        updateSeqPixelsPerBeat();
+        if (aCtx) seqJumpToBeat(0); else scanX = 0;
+        markActiveDropdownOption('sub-subdiv', mode);
+        if (!silent) showNotification(mode === 'compound' ? 'SUBDIVISIÓN: COMPUESTOS — PULSO = NEGRA CON PUNTILLO (6/8)' : 'SUBDIVISIÓN: SIMPLES — PULSO = NEGRA (4/4)');
+        return true;
+    }
+
+    function chooseSubdivision(mode, evt) {
+        if (evt) evt.stopPropagation();
+        const changed = setSubdivisionMode(mode, false);
+        closeAllDropdowns();
+        if (changed && mode === 'compound') openCompoundFiguresPanel();
+        if (changed && mode === 'simple') closeCompoundFiguresPanel();
+        if (changed && window.innerWidth <= COMPACT_NARROW_PX && document.body.classList.contains('compact-menu-open')) toggleCompactMenu(false);
+    }
+
+    // ===================== CLAVE MUSICAL (AJUSTES > PARTITURA > "Clave Musical", solo APRENDIZAJE MUSICAL) =====================
+    // Cambiar entre el pentagrama doble y uno solo cambia los "carriles" de escritura, así que reinicia lo escrito (con
+    // confirmación); cambiar entre claves de un pentagrama único (o con el doble, solo 'grand') no toca lo escrito: las notas se
+    // vuelven a ubicar en el pentagrama según su altura real.
+    function setStaffClefMode(mode, silent) {
+        if (mode !== 'grand' && !CLEF_SPECS[mode]) return false;
+        if (mode === staffClefMode) return false;
+        const slotChange = (mode === 'grand') !== (staffClefMode === 'grand');
+        if (slotChange) {
+            if (!silent && notesOnCanvas.length > 0) {
+                if (!window.confirm('Cambiar entre el pentagrama doble de piano y un pentagrama único reinicia la partitura escrita. ¿Continuar?')) return false;
+            }
+            if (playbackState !== 'stopped') stopPlayback();
+            notesOnCanvas = []; seqSelectedEntry = null;
+            pendingChordGroups = {};
+            pendingClefEntry = { treble: null, bass: null };
+            voiceTimelineEnd = { treble: 0, bass: 0 };
+            voiceTimelineStarted = { treble: false, bass: false };
+        }
+        staffClefMode = mode;
+        updateSeqXOffset();
+        updateSeqPixelsPerBeat();
+        if (slotChange) { if (aCtx) seqJumpToBeat(0); else scanX = 0; }
+        markActiveDropdownOption('sub-clave', mode);
+        if (!silent) showNotification(mode === 'grand' ? 'CLAVE: PENTAGRAMA DOBLE DE PIANO (SOL + FA)' : 'CLAVE MUSICAL: ' + CLEF_SPECS[mode].label);
+        return true;
+    }
+    function chooseStaffClef(mode, evt) {
+        if (evt) evt.stopPropagation();
+        setStaffClefMode(mode, false);
+        closeAllDropdowns();
+    }
+
+    // --- Panel flotante "Figuras del compás compuesto" -------------------------------------------------
+    // Células rítmicas de UN pulso (6 semicorcheas = 3 corcheas), con su conteo "1-la-li", más las equivalencias
+    // simple <-> compuesto y los grupos irregulares. Cada célula se dibuja en SVG (cabezas, plicas, barras y puntillos).
+    const COMPOUND_CELLS = [
+        { u: [2, 2, 2],       count: '1 · la · li',        name: '3 corcheas' },
+        { u: [4, 2],          count: '1 – la · li',        name: 'negra + corchea' },
+        { u: [2, 4],          count: '1 · la – li',        name: 'corchea + negra' },
+        { u: [6],             count: '1 – la – li –',      name: 'negra con puntillo (el pulso)' },
+        { u: [1, 1, 1, 1, 1, 1], count: '1 ta la ta li ta', name: '6 semicorcheas' },
+        { u: [2, 1, 1, 1, 1], count: '1 · la ta li ta',    name: 'corchea + 4 semicorcheas' },
+        { u: [1, 1, 1, 1, 2], count: '1 ta la ta li ·',    name: '4 semicorcheas + corchea' },
+        { u: [3, 1, 2],       count: '1 – (la) ta li',     name: 'corchea con puntillo + semicorchea + corchea' },
+        { u: [2, 3, 1],       count: '1 · la – ta li',     name: 'corchea + corchea con puntillo + semicorchea' },
+        { u: [4, 1, 1],       count: '1 – la – li ta',     name: 'negra + 2 semicorcheas' },
+        { u: [1, 1, 4],       count: '1 ta la – li –',     name: '2 semicorcheas + negra' },
+        { u: [3, 3],          count: '1 – la / li – (dosillo)', name: 'dosillo: 2 corcheas en el tiempo de 3', tuplet: 2 }
+    ];
+    function compoundCellSvg(units, tuplet) {
+        const U = 15, W = 6 * U + 22, H = 58, hy = 44, stemH = 30;
+        const col = '#e8e8ee';
+        let g = '';
+        g += `<line x1="4" y1="${hy}" x2="${W - 4}" y2="${hy}" stroke="#555" stroke-width="1"/>`;
+        let x = 12, notes = [];
+        units.forEach(u => { notes.push({ x, u }); x += u * U; });
+        const hasFlag = n => n.u <= 3;
+        const top = hy - stemH;
+        // corchetes de cada pulso (inicio y fin)
+        g += `<line x1="${12 - 6}" y1="${H - 4}" x2="${12 - 6}" y2="${H - 9}" stroke="#777"/><line x1="${12 - 6}" y1="${H - 4}" x2="${12 + 6 * U - 6}" y2="${H - 4}" stroke="#777"/><line x1="${12 + 6 * U - 6}" y1="${H - 4}" x2="${12 + 6 * U - 6}" y2="${H - 9}" stroke="#777"/>`;
+        notes.forEach(n => {
+            g += `<line x1="${n.x + 4.6}" y1="${hy}" x2="${n.x + 4.6}" y2="${top}" stroke="${col}" stroke-width="1.5"/>`;
+            g += `<ellipse cx="${n.x}" cy="${hy}" rx="5" ry="3.7" transform="rotate(-20 ${n.x} ${hy})" fill="${col}"/>`;
+            if (n.u === 3 || n.u === 6) g += `<circle cx="${n.x + 10}" cy="${hy - 3.5}" r="1.9" fill="${col}"/>`;
+        });
+        // barras: grupos consecutivos de notas con corchete
+        let i = 0;
+        while (i < notes.length) {
+            if (!hasFlag(notes[i])) { i++; continue; }
+            let j = i; while (j + 1 < notes.length && hasFlag(notes[j + 1])) j++;
+            if (j > i) {
+                g += `<line x1="${notes[i].x + 4.6}" y1="${top}" x2="${notes[j].x + 4.6}" y2="${top}" stroke="${col}" stroke-width="3.2"/>`;
+                let k = i;
+                while (k <= j) {
+                    if (notes[k].u === 1) {
+                        let m = k; while (m + 1 <= j && notes[m + 1].u === 1) m++;
+                        if (m > k) g += `<line x1="${notes[k].x + 4.6}" y1="${top + 5}" x2="${notes[m].x + 4.6}" y2="${top + 5}" stroke="${col}" stroke-width="3.2"/>`;
+                        else { const nb = k > i ? k - 1 : k + 1; const dir = notes[nb].x >= notes[k].x ? 1 : -1; g += `<line x1="${notes[k].x + 4.6}" y1="${top + 5}" x2="${notes[k].x + 4.6 + dir * 8}" y2="${top + 5}" stroke="${col}" stroke-width="3.2"/>`; }
+                        k = m + 1;
+                    } else k++;
+                }
+            } else {
+                const n = notes[i], fx = n.x + 4.6;
+                g += `<path d="M${fx} ${top} q 8 6 6 16" stroke="${col}" stroke-width="1.8" fill="none"/>`;
+            }
+            i = j + 1;
+        }
+        if (tuplet) {
+            const x1 = notes[0].x, x2 = notes[notes.length - 1].x + 4.6;
+            g += `<text x="${(x1 + x2) / 2}" y="${top - 5}" fill="#ffd24a" font-size="13" font-style="italic" font-weight="bold" text-anchor="middle">${tuplet}</text>`;
+        }
+        return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${g}</svg>`;
+    }
+
+    let compoundWinEl = null;
+    function compoundFiguresHtml() {
+        let h = '<div class="cmp-body">';
+        h += '<p class="cmp-p">En los compases <b>compuestos</b> el pulso es la <b>negra con puntillo</b> y se divide en <b>3</b> partes iguales. Se cuenta <b>1 · la · li</b>.</p>';
+        h += '<table class="cmp-tab"><tr><th>Compás</th><th>Pulsos</th><th>Equivale a</th></tr><tr><td>6/8</td><td>2</td><td>2/4</td></tr><tr><td>9/8</td><td>3</td><td>3/4</td></tr><tr><td>12/8</td><td>4</td><td>4/4</td></tr></table>';
+        h += '<div class="cmp-h">Células de un pulso (= 6 semicorcheas)</div><div class="cmp-grid">';
+        COMPOUND_CELLS.forEach(c => { h += `<div class="cmp-cell">${compoundCellSvg(c.u, c.tuplet)}<div class="cmp-count">${c.count}</div><div class="cmp-name">${c.name}</div></div>`; });
+        h += '</div>';
+        h += '<div class="cmp-h">Valores largos</div><ul class="cmp-ul"><li><b>Blanca con puntillo</b> = 2 pulsos (compás entero de 6/8).</li><li><b>Redonda con puntillo</b> = 4 pulsos (compás entero de 12/8).</li><li>Una figura que cruza un pulso (p. ej. una negra que empieza en la última corchea) se escribe partida y <b>ligada</b> para que se vea el pulso.</li><li>Las barras unen las figuras de <b>cada pulso</b>: 6/8 = 3+3, 9/8 = 3+3+3, 12/8 = 3+3+3+3.</li></ul>';
+        h += '<div class="cmp-h">Dosillo</div><p class="cmp-p">Dos notas iguales en el tiempo de tres: en PrismaKeys se reconoce cuando tocás 2 notas parejas en un mismo pulso (cada una dura medio pulso) y se dibuja con un <b>2</b>.</p>';
+        h += '<div class="cmp-h">Tresillo y seisillo (compás simple)</div><p class="cmp-p">En compás simple (Subdivisión: Simples) tres notas parejas en un tiempo se escriben como <b>tresillo</b> (3 corcheas) y seis notas parejas como <b>seisillo</b> (6 semicorcheas), con el número 3 o 6.</p>';
+        h += '</div>';
+        return h;
+    }
+    function openCompoundFiguresPanel() {
+        if (!compoundWinEl) {
+            const host = document.createElement('div');
+            host.className = 'info-win'; host.id = 'compoundWin'; host.setAttribute('role', 'dialog'); host.setAttribute('aria-label', 'Figuras del compás compuesto');
+            host.style.setProperty('--iw', '#7fd1ff');
+            host.innerHTML = '<div class="info-win-head"><span class="info-win-title">Figuras del compás compuesto</span><button type="button" class="info-win-x" aria-label="Cerrar">✕</button></div><div class="info-win-body">' + compoundFiguresHtml() + '</div>';
+            document.body.appendChild(host);
+            host.querySelector('.info-win-x').addEventListener('click', () => host.classList.remove('open'));
+            host.addEventListener('pointerdown', () => { host.style.zIndex = String(++infoZ); }, true);
+            makeFloatingDraggable(host, host.querySelector('.info-win-head'));
+            compoundWinEl = host;
+        }
+        const host = compoundWinEl;
+        if (!host.classList.contains('open')) {
+            if (!host.dataset.placed) {
+                const bar = (document.getElementById('compactBar') || { offsetHeight: 44 }).offsetHeight;
+                const w = Math.min(window.innerWidth * 0.94, 360);
+                host.style.left = Math.max(0, Math.min(window.innerWidth - w, window.innerWidth - w - 10)) + 'px';
+                host.style.top = (bar + 10) + 'px';
+                host.dataset.placed = '1';
+            }
+            host.classList.add('open');
+        }
+        host.style.zIndex = String(++infoZ);
+        if (window.innerWidth <= COMPACT_NARROW_PX && document.body.classList.contains('compact-menu-open')) toggleCompactMenu(false);
+    }
+    function closeCompoundFiguresPanel() { if (compoundWinEl) compoundWinEl.classList.remove('open'); }
 
     // Cambia el tempo (BPM) del metrónomo del secuenciador de Scanline Trace. Al cambiar de
     // tempo en caliente reiniciamos el reloj del metrónomo (seqStartTime/nextBeatIndex) en vez
@@ -11022,7 +11726,7 @@
         // solo se conoce al soltarla). seqClef/seqQStart quedan guardados en la voz para que
         // finalizeSequencerNoteOff() los use al clasificar y ubicar la figura, sin recalcularlos
         // con un seqStartTime que pudiera haber cambiado mientras tanto (cambio de tempo, pausa).
-        let seqClef = null, seqQStart = null;
+        let seqClef = null, seqQStart = null, seqRawBeat = null;
         // !isPlaybackTriggering (ver MODO REPRODUCCIÓN más adelante en el script): una nota
         // disparada por el propio reproductor NUNCA debe tocar la rejilla/línea de tiempo de la
         // notación (voiceTimelineEnd, pendingClefEntry, silencios vía emitRests()) -- si lo
@@ -11039,6 +11743,7 @@
             const beatDur = 60 / currentBPM;
             seqClef = getStaffInfo(midiForRegister).clef; // midiForRegister -- ver el comentario grande junto a isMicrotonalNote, más arriba
             const rawStartBeat = (now - seqStartTime) / beatDur;
+            seqRawBeat = rawStartBeat;
             if (voiceTimelineStarted[seqClef]) {
                 // Si la última nota que sonó en esta clave sigue "abierta" (se soltó, pero se
                 // pospuso escribir su figura -- ver pendingClefEntry), AHORA se sabe su duración
@@ -11121,7 +11826,7 @@
             startTime: now, // marca de tiempo de Web Audio al pulsar -- usada en stopNote() para medir
                             // cuánto duró la nota y clasificarla en la figura rítmica correspondiente
                             // (o, para MODO REPRODUCCIÓN, para reproducirla con su duración real)
-            groupId, groupStartTime, seqClef, seqQStart
+            groupId, groupStartTime, seqClef, seqQStart, seqRawBeat
         };
 
         // ACORDE PIVOTE (ver handlePivotChordCheck()): recién ahora la nota nueva ya quedó
@@ -12659,6 +13364,21 @@
 
     // Refleja playbackState en el cuadro de MODO REPRODUCCIÓN del HTML: qué botón se ve "activo" y
     // cuáles quedan deshabilitados (no tiene sentido pausar algo que ya está parado, por ejemplo).
+    // APRENDIZAJE MUSICAL: a pedido del usuario, los botones de reproducción (#dd-playback: PLAY/PAUSA/STOP/REGRESAR/AVANZAR/IR AL INICIO)
+    // salen del cajón de AJUSTES y se muestran en la barra principal, a la derecha de PARTITURA. El MISMO nodo se muda (conserva ids y
+    // listeners, así updatePlaybackButtonsUI() sigue funcionando) y vuelve a su lugar de siempre en cualquier otra sección.
+    let playbackHomeParent = null, playbackHomeNext = null;
+    function placePlaybackControls(section) {
+        const el = document.getElementById('dd-playback'), bar = document.getElementById('compactBar'), score = document.getElementById('compactScoreBtn');
+        if (!el || !bar || !score) return;
+        if (!playbackHomeParent) { playbackHomeParent = el.parentNode; playbackHomeNext = el.nextSibling; }
+        if (section === 'aprendizaje') {
+            if (el.parentNode !== bar) score.insertAdjacentElement('afterend', el);
+        } else if (el.parentNode === bar) {
+            playbackHomeParent.insertBefore(el, (playbackHomeNext && playbackHomeNext.parentNode === playbackHomeParent) ? playbackHomeNext : null);
+        }
+    }
+
     function updatePlaybackButtonsUI() {
         const playBtn = document.getElementById('playback-play-btn');
         const pauseBtn = document.getElementById('playback-pause-btn');
@@ -13424,6 +14144,271 @@
         return { freq: sampleRate / refinedLag, rms, confidence: bestScore };
     }
 
+
+    // ===== MIC POLY CORE BEGIN =====
+        // ---- NÚCLEO POLIFÓNICO (puro, sin DOM; probado en Node con señales sintéticas) ----
+        // Estima varias alturas SIMULTÁNEAS (voces/instrumentos distintos en un solo micrófono) a partir del espectro de
+        // magnitudes (dB, ver AnalyserNode.getFloatFrequencyData()). Método (estilo "saliencia armónica" + cancelación iterativa):
+        //   1) micPolyFindPeaks(): picos espectrales (con piso de ruido propio e interpolación parabólica de la frecuencia).
+        //   2) Candidatas a fundamental: cada pico y sus submúltiplos 1/2, 1/3, 1/4.
+        //   3) Saliencia de cada candidata = suma de las amplitudes de sus armónicos presentes (peso 1/raíz(h)) x cobertura de los
+        //      primeros 6 armónicos (penaliza subarmónicos falsos: les faltan los impares). Toda candidata TIENE que tener pico en su
+        //      propia fundamental: sin esa exigencia, una quinta (2:3) o una octava se leían como una fundamental fantasma una octava abajo.
+        //   4) Se elige la mejor, se afina su frecuencia con sus armónicos y se RESTA su envolvente espectral suave (lo que sobresale,
+        //      p. ej. un armónico compartido con otra voz, queda como residuo); se repite hasta nVoices o hasta que la mejor restante sea débil.
+        // LÍMITES CONOCIDOS (inherentes a 1 solo micrófono, no a este código): dos voces en OCTAVA exacta (o quinta+octava...) comparten
+        // casi todos los armónicos y se leen como una sola; dos notas a menos de ~2 semitonos en el registro grave se funden en un pico.
+        // una voz con la fundamental totalmente recortada por el micrófono se lee una octava arriba.
+    const MIC_POLY_FFT_SIZE = 8192;
+    const MIC_POLY_MIN_F0 = 65;
+    const MIC_POLY_MAX_F0 = 1100;
+    const MIC_POLY_MAX_PARTIAL = 5000;
+    const MIC_POLY_GATE_DB = -70;
+    const MIC_POLY_PEAK_ABOVE_NOISE_DB = 14;
+    const MIC_POLY_REL_FLOOR_DB = -42;
+    const MIC_POLY_MAX_H = 10;
+    const MIC_POLY_COVER_H = 6;
+    const MIC_POLY_REL_MIN_SALIENCE = 0.3;
+    const MIC_POLY_MIN_COVERAGE = 0.5;
+
+    function micPolyFindPeaks(db, sampleRate) {
+        const N = db.length;
+        const binHz = sampleRate / (2 * N);
+        const kLo = Math.max(2, Math.floor(40 / binHz));
+        const kHi = Math.min(N - 3, Math.ceil(MIC_POLY_MAX_PARTIAL / binHz));
+        // piso de ruido: mediana de la banda (submuestreada)
+        const sample = [];
+        for (let k = kLo; k <= kHi; k += 3) sample.push(db[k] > -200 ? db[k] : -200);
+        sample.sort((a, b) => a - b);
+        const noise = sample.length ? sample[sample.length >> 1] : -200;
+        const minDb = Math.max(MIC_POLY_GATE_DB, noise + MIC_POLY_PEAK_ABOVE_NOISE_DB);
+        const peaks = [];
+        let maxDb = -Infinity;
+        for (let k = kLo; k <= kHi; k++) {
+            const d = db[k];
+            if (d > minDb && d > db[k - 1] && d >= db[k + 1] && d > db[k - 2] && d >= db[k + 2]) {
+                const a = db[k - 1], b = d, c = db[k + 1];
+                const den = a - 2 * b + c;
+                const shift = (den !== 0 && isFinite(den)) ? 0.5 * (a - c) / den : 0;
+                const sh = Math.max(-0.5, Math.min(0.5, shift));
+                const pk = b - 0.25 * (a - c) * sh;
+                peaks.push({ f: (k + sh) * binHz, db: pk, a: Math.pow(10, pk / 20) });
+                if (pk > maxDb) maxDb = pk;
+            }
+        }
+        const out = peaks.filter(p => p.db >= maxDb + MIC_POLY_REL_FLOOR_DB);
+        out.sort((x, y) => y.a - x.a);
+        return { peaks: out.slice(0, 60), maxDb, noise, binHz };
+    }
+
+    // micPolyAnalyze(db, sampleRate, nVoices): -> [{freq, amp, sal}] ordenado por saliencia
+    function micPolyAnalyze(db, sampleRate, nVoices, range) {
+        const fMin = (range && range.min) || MIC_POLY_MIN_F0;
+        const fMax = (range && range.max) || MIC_POLY_MAX_F0;
+        const { peaks, binHz } = micPolyFindPeaks(db, sampleRate);
+        if (!peaks.length) return [];
+        const r = peaks.map(p => p.a);       // amplitudes residuales
+        const used = new Array(peaks.length).fill(false);
+        const result = [];
+
+        // candidatas: cada pico y sus submúltiplos 1/2, 1/3, 1/4
+        const cand = [];
+        const top = Math.min(peaks.length, 24);
+        for (let i = 0; i < top; i++) {
+            for (let h = 1; h <= 4; h++) {
+                const f0 = peaks[i].f / h;
+                if (f0 < fMin || f0 > fMax) continue;
+                if (cand.some(c => Math.abs(1200 * Math.log2(c / f0)) < 25)) continue;
+                cand.push(f0);
+            }
+        }
+        if (!cand.length) return [];
+
+        function match(f0) {
+            // devuelve armónicos hallados: [{h, j}] y cobertura
+            const found = [];
+            let expected = 0;
+            for (let h = 1; h <= MIC_POLY_MAX_H; h++) {
+                const hf = h * f0;
+                if (hf > MIC_POLY_MAX_PARTIAL) break;
+                if (h <= MIC_POLY_COVER_H) expected++;
+                const tol = Math.max(0.02 * hf, 1.2 * binHz);
+                let bj = -1, bd = Infinity;
+                for (let j = 0; j < peaks.length; j++) {
+                    const d = Math.abs(peaks[j].f - hf);
+                    if (d < tol && d < bd && r[j] > 0) { bd = d; bj = j; }
+                }
+                if (bj >= 0) found.push({ h, j: bj });
+            }
+            let cov = 0;
+            for (const m of found) if (m.h <= MIC_POLY_COVER_H) cov++;
+            return { found, coverage: expected ? cov / expected : 0 };
+        }
+
+        function salience(f0) {
+            const m = match(f0);
+            let s = 0;
+            for (const x of m.found) s += r[x.j] / Math.sqrt(x.h);
+            if (!m.found.length || m.found[0].h !== 1) return { s: 0, m }; // sin pico en la propia fundamental no hay candidata (evita fundamentales fantasma una octava/quinta abajo)
+            return { s: s * (0.3 + 0.7 * m.coverage), m };
+        }
+
+        let firstSal = 0;
+        for (let v = 0; v < nVoices; v++) {
+            let best = null;
+            for (const f0 of cand) {
+                const sv = salience(f0);
+                if (!best || sv.s > best.s * 1.0001) best = { f0, s: sv.s, m: sv.m };
+            }
+            if (!best || best.s <= 0) break;
+            if (v === 0) firstSal = best.s;
+            else {
+                if (best.s < firstSal * MIC_POLY_REL_MIN_SALIENCE) break;
+                if (best.m.coverage < MIC_POLY_MIN_COVERAGE) break;
+            }
+            if (best.m.coverage < 0.34) break;
+            // refinar f0 con los armónicos hallados
+            let num = 0, den = 0, ampSum = 0;
+            for (const x of best.m.found) {
+                const w = r[x.j] * x.h;
+                num += w * (peaks[x.j].f / x.h);
+                den += w;
+                ampSum += r[x.j];
+            }
+            const f0r = den > 0 ? num / den : best.f0;
+            result.push({ freq: f0r, amp: ampSum, sal: best.s });
+            // atenuar sus armónicos
+            // Se resta la parte "explicada" por esta voz: para cada armónico, el menor entre su amplitud y el promedio de sus dos vecinos
+            // armónicos (envolvente suave). Lo que sobresale de esa envolvente -- p. ej. un armónico compartido con otra voz, o una voz
+            // a la octava -- queda como residuo y todavía puede detectarse.
+            const fh = best.m.found, byH = {};
+            for (const x of fh) byH[x.h] = r[x.j];
+            for (const x of fh) {
+                const lo = byH[x.h - 1], hi = byH[x.h + 1], a = r[x.j];
+                let est = a;
+                if (lo !== undefined && hi !== undefined) est = Math.min(a, 0.5 * (lo + hi));
+                else if (lo !== undefined) est = Math.min(a, lo);
+                else if (hi !== undefined) est = Math.min(a, hi);
+                r[x.j] = Math.max(a - est, 0);
+            }
+            // evitar candidatas ya elegidas
+            for (let i = cand.length - 1; i >= 0; i--) {
+                if (Math.abs(1200 * Math.log2(cand[i] / f0r)) < 60) cand.splice(i, 1);
+            }
+            if (!cand.length) break;
+        }
+        return result;
+    }
+
+    // ===== MIC POLY CORE END =====
+
+    // ---- Estado y seguimiento polifónico (VOCES 2 y 3) ----
+    // micVoices: 1 = detector monofónico (micAutoCorrelate, fftSize 2048); 2/3 = micPolyAnalyze (fftSize 8192, ventana ~170 ms:
+    // más resolución en frecuencia a costa de algo de latencia). Por defecto 2, se recuerda en localStorage (mic_voices_v1).
+    let micVoices = 2;
+    try { const sv = parseInt(localStorage.getItem('mic_voices_v1'), 10); if (sv >= 1 && sv <= 4) micVoices = sv; } catch (e) { /* sin almacenamiento */ }
+    const MIC_POLY_STABLE_FRAMES = 3;   // análisis seguidos de la misma nota antes de tocarla
+    const MIC_POLY_RELEASE_FRAMES = 5;  // análisis seguidos sin verla antes de soltarla
+    const micPolyHeld = new Map();      // midi -> { miss }
+    const micPolyCand = new Map();      // midi -> análisis seguidos
+    let micPolyDb = null;
+
+    function micPolyReleaseAll() {
+        for (const m of micPolyHeld.keys()) stopNote(m);
+        micPolyHeld.clear();
+        micPolyCand.clear();
+    }
+
+    function micPolyFrame() {
+        const db = micPolyDb;
+        micAnalyserNode.getFloatFrequencyData(db);
+        const found = micPolyAnalyze(db, aCtx.sampleRate, micVoices);
+        const table = getFixedKeyboardCents();
+        const detected = new Map(); // midi -> { c, amp }
+        let maxAmp = 0;
+        for (const v of found) if (v.amp > maxAmp) maxAmp = v.amp;
+        for (const v of found) {
+            let prev = null, bd = Infinity;
+            for (const m of micPolyHeld.keys()) {
+                const d = Math.abs(1200 * Math.log2(v.freq / micTargetFreqForMidi(m, table)));
+                if (d < bd) { bd = d; prev = m; }
+            }
+            if (bd > 100) prev = null; // solo se "pega" a una nota sonando si está a menos de ~1 semitono
+            const near = micNearestAppNote(v.freq, prev);
+            if (!detected.has(near.m)) detected.set(near.m, { c: near.c, amp: v.amp });
+        }
+        // afinador: sobre la voz más fuerte
+        if (found.length) {
+            let top = found[0];
+            for (const v of found) if (v.amp > top.amp) top = v;
+            micTunerUpdate(top.freq);
+        } else micTunerNoSignal();
+
+        // notas sonando: mantener o soltar
+        for (const [m, st] of micPolyHeld) {
+            if (detected.has(m)) st.miss = 0;
+            else if (++st.miss >= MIC_POLY_RELEASE_FRAMES) { stopNote(m); micPolyHeld.delete(m); }
+        }
+        // candidatas nuevas
+        for (const m of Array.from(micPolyCand.keys())) if (!detected.has(m)) micPolyCand.delete(m);
+        for (const [m, info] of detected) {
+            if (micPolyHeld.has(m)) continue;
+            const n = (micPolyCand.get(m) || 0) + 1;
+            if (n < MIC_POLY_STABLE_FRAMES) { micPolyCand.set(m, n); continue; }
+            if (micPolyHeld.size >= micVoices) { // hacer lugar: soltar la que lleva más tiempo sin verse (solo si ya dejó de verse un poco: evita el vaivén cuando suenan más fuentes que VOCES)
+                let worst = null, wm = -1;
+                for (const [hm, st] of micPolyHeld) if (st.miss > wm) { wm = st.miss; worst = hm; }
+                if (worst === null || wm < 2) { micPolyCand.set(m, n); continue; }
+                stopNote(worst); micPolyHeld.delete(worst);
+            }
+            micPolyCand.delete(m);
+            const vel = Math.max(0.4, Math.min(1, 0.45 + 0.5 * (maxAmp > 0 ? info.amp / maxAmp : 1)));
+            playNote(m, vel);
+            micPolyHeld.set(m, { miss: 0 });
+        }
+        if (micPolyHeld.size) {
+            const ms = Array.from(micPolyHeld.keys()).sort((a, b) => a - b);
+            updateMicStatusReadout(ms.map(m => micNoteLabel(m, detected.has(m) ? detected.get(m).c : 0)).join(' · '));
+        } else updateMicStatusReadout(found.length ? Array.from(detected.keys()).sort((a, b) => a - b).map(m => micNoteLabel(m, 0)).join(' · ') + ' …' : '— silencio —');
+    }
+
+    // micSetVoices(n): botones VOCES 1/2/3/4. Con el micrófono activo reconfigura el analizador (otro fftSize) y suelta todo lo que sonaba.
+    function micSetVoices(n) {
+        n = Math.max(1, Math.min(4, n | 0));
+        if (n === micVoices && document.querySelector('#micVoices button.on')) return;
+        const was = micVoices;
+        micVoices = n;
+        try { localStorage.setItem('mic_voices_v1', String(n)); } catch (e) { /* sin almacenamiento */ }
+        if (micActive) {
+            if (micHeldMidi !== null) { stopNote(micHeldMidi); micHeldMidi = null; }
+            micPolyReleaseAll();
+            micCandidateMidi = null; micCandidateFrames = 0; micSilenceFrames = 0;
+            micConfigureAnalyser();
+            micTunerReset();
+            updateMicStatusReadout('— escuchando —');
+        }
+        updateMicVoicesUI();
+        if (was !== n) showNotification(n === 1 ? 'MICRÓFONO: 1 VOZ (UNA NOTA A LA VEZ)' : `MICRÓFONO: ${n} VOCES SIMULTÁNEAS`);
+    }
+
+    function updateMicVoicesUI() {
+        document.querySelectorAll('#micVoices button').forEach(b => b.classList.toggle('on', parseInt(b.dataset.v, 10) === micVoices));
+    }
+
+    function micConfigureAnalyser() {
+        if (!micAnalyserNode) return;
+        if (micVoices >= 2) {
+            micAnalyserNode.fftSize = MIC_POLY_FFT_SIZE;
+            micAnalyserNode.smoothingTimeConstant = 0.4;
+            micPolyDb = new Float32Array(micAnalyserNode.frequencyBinCount);
+        } else {
+            micAnalyserNode.fftSize = MIC_FFT_SIZE;
+            micAnalyserNode.smoothingTimeConstant = 0.8;
+        }
+    }
+    document.addEventListener('DOMContentLoaded', updateMicVoicesUI);
+    updateMicVoicesUI();
+
     // micNoteLabel(midi, cents): "Do4 (+12¢)" -- nombre de nota + octava + desviación en cents,
     // para el indicador en vivo (#micStatusReadout). Reutiliza noteNamesSharp/noteNamesFlatSpelling
     // (useFlatNotation), MISMA grafía que el resto de la app.
@@ -13475,8 +14460,11 @@
         micStream = stream;
         micSourceNode = aCtx.createMediaStreamSource(micStream);
         micAnalyserNode = aCtx.createAnalyser();
-        micAnalyserNode.fftSize = MIC_FFT_SIZE;
-        micSourceNode.connect(micAnalyserNode); // NUNCA a masterGain/destino -- ver el comentario grande de ARQUITECTURA, más arriba
+        micSourceNode.connect(micAnalyserNode);
+        micRecConnect(); // si se está grabando, la voz también entra a la grabación (ver prismaRecMicBus)
+        micConfigureAnalyser();
+        micPolyHeld.clear();
+        micPolyCand.clear(); // NUNCA a masterGain/destino -- ver el comentario grande de ARQUITECTURA, más arriba
         micActive = true;
         micHeldMidi = null;
         micCandidateMidi = null;
@@ -13487,7 +14475,7 @@
         micTunerReset();
         updateMicStatusReadout('— escuchando —');
         micDetectLoop();
-        showNotification('MICRÓFONO ACTIVADO -- TOCÁ O CANTÁ UNA NOTA A LA VEZ');
+        showNotification(micVoices === 1 ? 'MICRÓFONO ACTIVADO -- TOCÁ O CANTÁ UNA NOTA A LA VEZ' : `MICRÓFONO ACTIVADO -- HASTA ${micVoices} VOCES A LA VEZ`);
     }
 
     // stopMicInput(): suelta el micrófono de verdad (MediaStreamTrack.stop(), no solo dejar de
@@ -13498,11 +14486,13 @@
     function stopMicInput() {
         if (micRafId !== null) { cancelAnimationFrame(micRafId); micRafId = null; }
         if (micHeldMidi !== null) { stopNote(micHeldMidi); micHeldMidi = null; }
+        micPolyReleaseAll();
         if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
         if (micSourceNode) { try { micSourceNode.disconnect(); } catch (e) { /* ya desconectado */ } micSourceNode = null; }
         micAnalyserNode = null;
         micActive = false;
         micTunerReset();
+        micTesituraSync();
         micCandidateMidi = null;
         micCandidateFrames = 0;
         micSilenceFrames = 0;
@@ -13544,6 +14534,9 @@
         micRafId = requestAnimationFrame(micDetectLoop);
         micFrameSkip = (micFrameSkip + 1) % 2;
         if (micFrameSkip !== 0) return;
+        micTesituraSync();
+
+        if (micVoices >= 2) { micPolyFrame(); return; }
 
         const buf = new Float32Array(micAnalyserNode.fftSize);
         micAnalyserNode.getFloatTimeDomainData(buf);
@@ -13793,6 +14786,119 @@
     function micTunerReset() {
         micTunerMidi = null; micTunerCents = 0; micTunerStable = 0; micTunerSilence = 0; micTunerInTune = false;
         micTunerRender();
+    }
+    // =================== TESITURA DE VOZ (#dd-tesitura, solo "TOCAR CON MICRÓFONO") ===================
+    // A pedido del usuario, con su tabla de tesituras (soprano, mezzosoprano, contralto, tenor, barítono, bajo). Cada voz tiene una
+    // EXTENSIÓN (los 15 sonidos de la tabla, 2 octavas diatónicas) y una TESITURA CÓMODA (la franja amarilla de la tabla, 10 sonidos).
+    // Se numeran en "k" (sonidos naturales contados desde Mi1 = Mi2 científico = MIDI 40) tal como en la tabla; la numeración de
+    // octavas es la de la tabla (Do3 = Do central = MIDI 60; en notación científica sería C4, que también se muestra, chico).
+    // Elegir una voz: (1) activa Selección por Lienzo (colorScaleLockMode='lienzo' -- Actuación > Escalera de colores > Modo de
+    // Bloqueo), y (2) abre la ventana flotante con la escalera. Los escalones son las notas de la ESCALA ACTIVA dentro de la extensión
+    // (en Do mayor son justo los naturales de la tabla) y se tiñen con el color de cada nota. Con el micrófono activo, se iluminan
+    // las notas que se están cantando (micTesituraSync()). Al salir de la sección o elegir "Ninguna" se cierra la ventana y se
+    // devuelve el modo de bloqueo que había antes (tesituraReset()).
+    const TESITURA_NAT_OFFS = [0, 1, 3, 5, 7, 8, 10]; // E F G A B C D, en semitonos desde Mi (MIDI 40)
+    function tesNatMidi(k) { return 40 + 12 * Math.floor(k / 7) + TESITURA_NAT_OFFS[((k % 7) + 7) % 7]; }
+    const TESITURAS = {
+        soprano:      { label: 'Soprano',      ext: [12, 26], tes: [14, 23] }, // Do3-Do5, cómoda Mi3-Sol4
+        mezzosoprano: { label: 'Mezzosoprano', ext: [10, 24], tes: [12, 21] }, // La2-La4, cómoda Do3-Mi4
+        contralto:    { label: 'Contralto',    ext: [8, 22],  tes: [10, 19] }, // Fa2-Fa4, cómoda La2-Do4
+        tenor:        { label: 'Tenor',        ext: [4, 18],  tes: [7, 16] },  // Si1-Si3, cómoda Mi2-Sol3
+        baritono:     { label: 'Barítono',     ext: [2, 16],  tes: [5, 14] },  // Sol1-Sol3, cómoda Do2-Mi3
+        bajo:         { label: 'Bajo',         ext: [0, 14],  tes: [3, 12] }   // Mi1-Mi3, cómoda La1-Do3
+    };
+    let tesituraKey = null;
+    let tesituraPrevLock = null; // modo de bloqueo que había ANTES de elegir una voz (null = no se tocó nada)
+    let tesituraWinEl = null;
+    let tesituraActiveKey = '';
+    function tesituraLabel(m) { return getLearningLabel(m).solfege.toUpperCase() + ' ' + (Math.floor(m / 12) - 2); }
+
+    function tesituraBuildWin() {
+        if (tesituraWinEl) return tesituraWinEl;
+        const host = document.createElement('div');
+        host.className = 'info-win'; host.id = 'tesituraWin'; host.setAttribute('role', 'dialog'); host.setAttribute('aria-label', 'Escalera de sonidos de la tesitura');
+        host.style.setProperty('--iw', '#ffd24a');
+        host.innerHTML = '<div class="info-win-head"><span class="info-win-title">Tesitura</span><button type="button" class="info-win-x" aria-label="Cerrar">✕</button></div><div class="info-win-body"><div class="tes-body"><div class="tes-info"></div><div class="tes-stairs"></div></div></div>';
+        document.body.appendChild(host);
+        host.querySelector('.info-win-x').addEventListener('click', () => host.classList.remove('open'));
+        host.addEventListener('pointerdown', () => { host.style.zIndex = String(++infoZ); }, true);
+        makeFloatingDraggable(host, host.querySelector('.info-win-head'));
+        tesituraWinEl = host;
+        return host;
+    }
+
+    function tesituraRender() {
+        const t = tesituraKey && TESITURAS[tesituraKey];
+        if (!t || !tesituraWinEl) return;
+        const lo = tesNatMidi(t.ext[0]), hi = tesNatMidi(t.ext[1]), tlo = tesNatMidi(t.tes[0]), thi = tesNatMidi(t.tes[1]);
+        const mids = [];
+        for (let m = lo; m <= hi; m++) if (isAllowedByColorScaleLock(m)) mids.push(m);
+        const indent = Math.max(3, Math.min(12, Math.floor(160 / Math.max(1, mids.length - 1))));
+        let html = '';
+        for (let i = mids.length - 1; i >= 0; i--) {
+            const m = mids[i], c = getDynamicColor(m);
+            const light = (0.299 * c.rgb.r + 0.587 * c.rgb.g + 0.114 * c.rgb.b) > 150;
+            html += `<div class="tes-step${(m >= tlo && m <= thi) ? ' comfy' : ''}" data-midi="${m}" style="margin-left:${i * indent}px;background:${c.css};color:${light ? '#000' : '#fff'}"><b>${tesituraLabel(m)}</b><small>${micNoteLabel(m, 0)}</small></div>`;
+        }
+        tesituraWinEl.querySelector('.info-win-title').textContent = 'Tesitura de ' + t.label;
+        tesituraWinEl.querySelector('.tes-info').innerHTML = `<b>${t.label.toUpperCase()}</b> · extensión ${tesituraLabel(tesNatMidi(t.ext[0]))} – ${tesituraLabel(tesNatMidi(t.ext[1]))}<br>franja dorada = tesitura cómoda (${tesituraLabel(tlo)} – ${tesituraLabel(thi)})`;
+        tesituraWinEl.querySelector('.tes-stairs').innerHTML = html;
+        tesituraActiveKey = '\u0000';
+        micTesituraSync();
+    }
+
+    function chooseTesitura(key, evt) {
+        if (evt) evt.stopPropagation();
+        if (key === 'ninguna') { tesituraReset(); closeAllDropdowns(); return; }
+        const t = TESITURAS[key];
+        if (!t) return;
+        if (tesituraPrevLock === null) tesituraPrevLock = colorScaleLockMode;
+        tesituraKey = key;
+        chooseColorLockMode('lienzo'); // Actuación > Escalera de colores > Modo de bloqueo > Selección por Lienzo (cierra los desplegables)
+        markActiveDropdownOption('sub-tesitura', key);
+        const host = tesituraBuildWin();
+        tesituraRender();
+        if (!host.classList.contains('open')) {
+            if (!host.dataset.placed) {
+                const bar = (document.getElementById('compactBar') || { offsetHeight: 44 }).offsetHeight;
+                const w = Math.min(window.innerWidth * 0.94, 300);
+                host.style.left = Math.max(0, Math.min(window.innerWidth - w, 10)) + 'px';
+                host.style.top = (bar + 10) + 'px';
+                host.dataset.placed = '1';
+            }
+            host.classList.add('open');
+        }
+        host.style.zIndex = String(++infoZ);
+        if (window.innerWidth <= COMPACT_NARROW_PX && document.body.classList.contains('compact-menu-open')) toggleCompactMenu(false); // en pantalla angosta el cajón de AJUSTES taparía la escalera
+        showNotification(`TESITURA DE ${t.label.toUpperCase()} — SELECCIÓN POR LIENZO ACTIVADA`);
+    }
+
+    // Cierra la escalera y devuelve el modo de bloqueo previo (sin notificaciones). La llamada al salir de la sección va en enterPrismaKeys()/goToHomeScreen().
+    function tesituraReset() {
+        if (tesituraWinEl) tesituraWinEl.classList.remove('open');
+        tesituraKey = null;
+        markActiveDropdownOption('sub-tesitura', 'ninguna');
+        if (tesituraPrevLock !== null) {
+            if (colorScaleLockMode === 'lienzo' && tesituraPrevLock !== 'lienzo') {
+                colorScaleLockMode = tesituraPrevLock;
+                markActiveDropdownOption('sub-colorlock', colorScaleLockMode);
+                if (typeof refreshKeyboardColors === 'function') refreshKeyboardColors();
+                if (typeof updateAutoPivotButtonUI === 'function') updateAutoPivotButtonUI();
+            }
+            tesituraPrevLock = null;
+        }
+    }
+
+    window.__tesituraRender = () => { if (tesituraKey && tesituraWinEl && tesituraWinEl.classList.contains('open')) tesituraRender(); };
+
+    // Ilumina en la escalera las notas que el micrófono está sosteniendo ahora mismo (se llama en cada análisis y al parar el micrófono).
+    function micTesituraSync() {
+        if (!tesituraWinEl || !tesituraWinEl.classList.contains('open')) return;
+        const ms = micVoices >= 2 ? Array.from(micPolyHeld.keys()) : (micHeldMidi !== null ? [micHeldMidi] : []);
+        const key = ms.slice().sort((a, b) => a - b).join(',');
+        if (key === tesituraActiveKey) return;
+        tesituraActiveKey = key;
+        tesituraWinEl.querySelectorAll('.tes-step').forEach(el => el.classList.toggle('on', ms.includes(+el.dataset.midi)));
     }
     // =================== fin AFINADOR DEL MICRÓFONO ===================
 
@@ -14535,6 +15641,19 @@
     let prismaRecPcmChunksL = [];
     let prismaRecPcmChunksR = [];
     let prismaRecStartedAt = 0;
+    // VOZ DEL MICRÓFONO (solo "TOCAR CON MICRÓFONO"): a pedido del usuario, cuando se graba con el micrófono activo la voz/instrumento
+    // que entra por él también queda grabada. prismaRecMicBus es un GainNode que SOLO alimenta los nodos de grabación (el .wav, la
+    // pista de audio del .webm y el .wav de voz sola) -- NUNCA masterGain/destino, así que el micrófono sigue sin escucharse de vuelta
+    // (sin eco). Se crea al empezar cualquier grabación pero queda mudo salvo que el micrófono esté activo (micRecConnect(), llamada
+    // desde startMicInput()); el .wav de voz solo se descarga si el micrófono llegó a estar conectado durante la grabación.
+    let prismaRecMicBus = null;
+    let prismaRecVoiceNode = null;
+    let prismaRecVoiceChunks = [];
+    let prismaRecVoiceUsed = false;
+    function micRecConnect() {
+        if (!prismaRecMicBus || !micSourceNode) return;
+        try { micSourceNode.connect(prismaRecMicBus); prismaRecVoiceUsed = true; } catch (e) { /* ya conectado */ }
+    }
 
     function updatePrismaRecordingButtonUI() {
         const btn = document.getElementById('prismaRecordBtn');
@@ -14590,6 +15709,18 @@
         prismaRecAudioTapDest = aCtx.createMediaStreamDestination();
         globalAnalyser.connect(prismaRecAudioTapDest);
 
+        // 3b) Voz del micrófono (ver prismaRecMicBus, arriba): se suma al .wav y a la pista del .webm, y además se guarda sola en mono.
+        prismaRecVoiceChunks = [];
+        prismaRecVoiceUsed = false;
+        prismaRecMicBus = aCtx.createGain();
+        prismaRecMicBus.connect(prismaRecScriptNode);
+        prismaRecMicBus.connect(prismaRecAudioTapDest);
+        prismaRecVoiceNode = aCtx.createScriptProcessor(4096, 1, 1);
+        prismaRecVoiceNode.onaudioprocess = (evt) => { prismaRecVoiceChunks.push(evt.inputBuffer.getChannelData(0).slice()); };
+        prismaRecMicBus.connect(prismaRecVoiceNode);
+        prismaRecVoiceNode.connect(aCtx.destination); // sale en silencio (no se escribe outputBuffer) -- hace falta para que el navegador dispare onaudioprocess
+        micRecConnect(); // si el micrófono ya estaba activo, entra desde el primer instante
+
         const videoTrack = displayStream.getVideoTracks()[0];
         const audioTrack = prismaRecAudioTapDest.stream.getAudioTracks()[0];
         const combinedStream = new MediaStream([videoTrack, audioTrack]);
@@ -14609,7 +15740,7 @@
         prismaRecording = true;
         prismaRecStartedAt = Date.now();
         updatePrismaRecordingButtonUI();
-        showNotification('GRABANDO -- AUDIO (SIN COMPRIMIR) + VIDEO DE PANTALLA, EN CUALQUIER SECCIÓN');
+        showNotification(micActive ? 'GRABANDO -- AUDIO + VIDEO DE PANTALLA + VOZ DEL MICRÓFONO' : 'GRABANDO -- AUDIO (SIN COMPRIMIR) + VIDEO DE PANTALLA, EN CUALQUIER SECCIÓN');
     }
 
     async function stopPrismaRecording() {
@@ -14629,6 +15760,8 @@
         if (prismaRecDisplayStream) prismaRecDisplayStream.getTracks().forEach(t => t.stop()); // libera el indicador de "compartiendo pantalla" del navegador
         if (prismaRecAudioTapDest && globalAnalyser) { try { globalAnalyser.disconnect(prismaRecAudioTapDest); } catch (e) {} }
         if (prismaRecScriptNode) { try { prismaRecScriptNode.onaudioprocess = null; globalAnalyser.disconnect(prismaRecScriptNode); prismaRecScriptNode.disconnect(); } catch (e) {} }
+        if (prismaRecMicBus) { try { if (micSourceNode) micSourceNode.disconnect(prismaRecMicBus); } catch (e) {} try { prismaRecMicBus.disconnect(); } catch (e) {} }
+        if (prismaRecVoiceNode) { try { prismaRecVoiceNode.onaudioprocess = null; prismaRecVoiceNode.disconnect(); } catch (e) {} }
 
         if (prismaRecVideoChunks.length > 0) {
             const videoBlob = new Blob(prismaRecVideoChunks, { type: (prismaRecMediaRecorder && prismaRecMediaRecorder.mimeType) ? prismaRecMediaRecorder.mimeType : 'video/webm' });
@@ -14638,6 +15771,15 @@
             const wavBlob = buildWavBlobFromPcm(prismaRecPcmChunksL, prismaRecPcmChunksR, aCtx.sampleRate);
             downloadBlob(wavBlob, `prismakeys_audio_${stamp}.wav`);
         }
+        const hadVoice = prismaRecVoiceUsed && prismaRecVoiceChunks.length > 0;
+        if (hadVoice) {
+            const voiceBlob = buildWavBlobFromPcm(prismaRecVoiceChunks, prismaRecVoiceChunks, aCtx.sampleRate, true);
+            setTimeout(() => downloadBlob(voiceBlob, `prismakeys_voz_${stamp}.wav`), 600); // separado en el tiempo: algunos navegadores bloquean varias descargas simultáneas
+        }
+        prismaRecMicBus = null;
+        prismaRecVoiceNode = null;
+        prismaRecVoiceChunks = [];
+        prismaRecVoiceUsed = false;
 
         prismaRecMediaRecorder = null;
         prismaRecVideoChunks = [];
@@ -14648,7 +15790,7 @@
         prismaRecPcmChunksR = [];
 
         const durationSec = Math.round((finishedAt - prismaRecStartedAt) / 1000);
-        showNotification(`GRABACIÓN GUARDADA (${durationSec}s) -- SE DESCARGARON EL VIDEO (.webm) Y EL AUDIO SIN COMPRIMIR (.wav)`);
+        showNotification(`GRABACIÓN GUARDADA (${durationSec}s) -- SE DESCARGARON EL VIDEO (.webm) Y EL AUDIO SIN COMPRIMIR (.wav)` + (hadVoice ? ' + LA VOZ DEL MICRÓFONO SOLA (.wav)' : ''));
     }
 
     // buildWavBlobFromPcm(chunksL, chunksR, sampleRate): arma un archivo WAV PCM FLOAT32 (formato 3
@@ -14656,9 +15798,9 @@
     // fue mandando el AudioWorklet. FLOAT32 en vez de enteros de 16/24 bits porque es EXACTAMENTE
     // el mismo formato interno que ya usa Web Audio -- "sin comprimir", a pedido explícito del
     // usuario, significa acá cero pérdida de ningún tipo, ni siquiera de cuantización.
-    function buildWavBlobFromPcm(chunksL, chunksR, sampleRate) {
+    function buildWavBlobFromPcm(chunksL, chunksR, sampleRate, mono) {
         const totalSamples = chunksL.reduce((sum, c) => sum + c.length, 0);
-        const numChannels = 2;
+        const numChannels = mono ? 1 : 2;
         const bytesPerSample = 4; // float32
         const dataSize = totalSamples * numChannels * bytesPerSample;
         const buffer = new ArrayBuffer(44 + dataSize);
@@ -14683,7 +15825,7 @@
             const l = chunksL[i], r = chunksR[i];
             for (let j = 0; j < l.length; j++) {
                 view.setFloat32(offset, l[j], true); offset += 4;
-                view.setFloat32(offset, r[j], true); offset += 4;
+                if (!mono) { view.setFloat32(offset, r[j], true); offset += 4; }
             }
         }
         return new Blob([buffer], { type: 'audio/wav' });
@@ -16540,6 +17682,7 @@
     // quedan en su blanco/negro normal. Al cambiar de tónica esto se recalcula solo, porque
     // refreshKeyboardColors() ya se llama desde updateTonicDisplay() en cada cambio.
     function refreshKeyboardColors() {
+        if (window.__tesituraRender) setTimeout(window.__tesituraRender, 0); // la escalera de TESITURA DE VOZ sigue la tónica/escala/bloqueo activos
         for (let m = 21; m <= 108; m++) {
             const keyEl = document.getElementById(`key-${m}`);
             if (!keyEl) continue;
@@ -17372,6 +18515,7 @@
         // (playbackState arranca en 'stopped' desde el primer momento).
         currentSection = section;
         document.body.dataset.section = section;
+        placePlaybackControls(section);
         if (window.pcs) window.pcs.onSection(section);
         document.getElementById('homeScreen').classList.add('hidden');
         document.getElementById('mainAppContainer').classList.remove('hidden');
@@ -17401,6 +18545,9 @@
         // micrófono activo, pero así se evita el trabajo de más (y la notificación de abajo) en el
         // caso normal (entrar a cualquier OTRA sección sin haber usado nunca el micrófono).
         if (micActive) stopMicInput();
+        tesituraReset(); // cierra la escalera de TESITURA DE VOZ y devuelve el modo de bloqueo anterior (ver TESITURA DE VOZ)
+        if (section !== 'aprendizaje') { setSubdivisionMode('simple', true); closeCompoundFiguresPanel(); } // 'Subdivisión del pulso' es solo de APRENDIZAJE MUSICAL
+        if (section !== 'aprendizaje') setStaffClefMode('grand', true); // 'Clave Musical' también
         // TOCAR CON COLORES, a pedido del usuario (mismo motivo que arriba): sin esta línea era la
         // ÚNICA de las tres secciones que no fijaba su propio modo por defecto al entrar, así que
         // quedaba mostrando lo que hubiera estado activo en la sección anterior (Acuarela, el
@@ -17542,6 +18689,10 @@
         // micrófono se quedaría escuchando de fondo con la pantalla de inicio puesta, sin ningún
         // control visible que lo refleje.
         if (micActive) stopMicInput();
+        tesituraReset();
+        setSubdivisionMode('simple', true); closeCompoundFiguresPanel();
+        setStaffClefMode('grand', true);
+        placePlaybackControls(null);
         if (window.pcs) window.pcs.stop();
         if (typeof metroStop === 'function') { metroStop(); if (metroOpen) toggleMetroWindow(false); }
         if (typeof closeAllInfoWindows === 'function') closeAllInfoWindows();
@@ -18478,6 +19629,17 @@
                             wCtx.shadowBlur = 0;
                         }
                         wCtx.stroke();
+                        // Compás compuesto: dos guías muy tenues que dividen cada pulso en 3 (corcheas) para ubicar el "1 · la · li".
+                        if (subdivisionMode === 'compound') {
+                            wCtx.save();
+                            wCtx.strokeStyle = onLightBg ? 'rgba(30, 30, 30, 0.09)' : 'rgba(255, 255, 255, 0.07)';
+                            wCtx.lineWidth = 1; wCtx.shadowBlur = 0;
+                            for (let q = 1; q <= 2; q++) {
+                                const qx = x + q * SEQ_PIXELS_PER_BEAT / 3;
+                                wCtx.beginPath(); wCtx.moveTo(qx, 0); wCtx.lineTo(qx, wCan.height); wCtx.stroke();
+                            }
+                            wCtx.restore();
+                        }
                     }
                     wCtx.restore();
                 }
